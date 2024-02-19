@@ -18,8 +18,8 @@ exit /b 1
 set "username=%~1"
 set "password=%~2"
 
-@REM https://github.com/microsoft/WSL/issues/7865
-for /f "delims=" %%i in ('powershell -Command "(wsl -v) -replace '\0', ''"^|findstr /b /c:"WSL version"') do set WSL_VERSION=%%i
+set "WSL_UTF8=1" & @REM https://github.com/microsoft/WSL/releases/tag/0.64.0
+for /f "delims=" %%i in ('wsl -v^|findstr /b /c:"WSL version"') do set WSL_VERSION=%%i
 echo %WSL_VERSION% | findstr /C:"WSL version" > nul
 if %errorlevel% neq 0 (
   echo Error: 'wsl -v' did not return 'WSL version'.

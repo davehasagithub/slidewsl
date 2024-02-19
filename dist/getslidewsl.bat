@@ -3,7 +3,7 @@
 @REM
 @REM The Simple Linux Interface for DEveloping on WSL
 @REM
-@REM built Mon Feb 19 09:13:11 EST 2024
+@REM built Mon Feb 19 12:14:14 EST 2024
 @REM
 @REM warning: this script will run wsl --shutdown
 @REM
@@ -29,8 +29,8 @@ exit /b 1
 set "username=%~1"
 set "password=%~2"
 
-@REM https://github.com/microsoft/WSL/issues/7865
-for /f "delims=" %%i in ('powershell -Command "(wsl -v) -replace '\0', ''"^|findstr /b /c:"WSL version"') do set WSL_VERSION=%%i
+set "WSL_UTF8=1" & @REM https://github.com/microsoft/WSL/releases/tag/0.64.0
+for /f "delims=" %%i in ('wsl -v^|findstr /b /c:"WSL version"') do set WSL_VERSION=%%i
 echo %WSL_VERSION% | findstr /C:"WSL version" > nul
 if %errorlevel% neq 0 (
   echo Error: 'wsl -v' did not return 'WSL version'.
