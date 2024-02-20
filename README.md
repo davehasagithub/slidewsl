@@ -21,6 +21,14 @@ To quickly download the latest, you can run this from CMD:
 
 `  c:\dev> getslidewsl username password  `
 
+## Requirements
+
+- See: https://learn.microsoft.com/en-us/windows/wsl/install-manual
+- Ensure feature is enabled: _Windows Subsystem for Linux_
+- Ensure feature is enabled: _Virtual Machine Platform_
+- Update Subsystem for Linux: https://apps.microsoft.com/detail/9P9TQF7MRM4R
+- Install Oracle Linux 8.7: https://apps.microsoft.com/detail/9NGGZVB0BKD9
+
 ## Details
 
 Consider this a template that can be adjusted for your needs. It's currently
