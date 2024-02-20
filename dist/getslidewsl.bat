@@ -3,7 +3,7 @@
 @REM
 @REM The Simple Linux Interface for DEveloping on WSL
 @REM
-@REM built Mon Feb 19 12:14:14 EST 2024
+@REM built Mon Feb 19 20:55:36 EST 2024
 @REM
 @REM warning: this script will run wsl --shutdown
 @REM
@@ -25,18 +25,24 @@ goto Continue
 echo Usage: %~nx0 ^<username^> ^<password^>
 exit /b 1
 
+:SubsystemFailure
+echo Install failed
+echo See: https://learn.microsoft.com/en-us/windows/wsl/install-manual
+echo Ensure feature is enabled: Windows Subsystem for Linux
+echo Ensure feature is enabled: Virtual Machine Platform
+echo Update: https://apps.microsoft.com/detail/9P9TQF7MRM4R
+echo Install: https://apps.microsoft.com/detail/9NGGZVB0BKD9
+exit /b 1
+
 :Continue
 set "username=%~1"
 set "password=%~2"
 
 set "WSL_UTF8=1" & @REM https://github.com/microsoft/WSL/releases/tag/0.64.0
-for /f "delims=" %%i in ('wsl -v^|findstr /b /c:"WSL version"') do set WSL_VERSION=%%i
-echo %WSL_VERSION% | findstr /C:"WSL version" > nul
+
+wsl --status >nul
 if %errorlevel% neq 0 (
-  echo Error: 'wsl -v' did not return 'WSL version'.
-  echo This might indicate an old version of wsl.
-  echo Please update: https://apps.microsoft.com/detail/9P9TQF7MRM4R
-  exit /b 1
+  goto SubsystemFailure
 )
 
 set num_chunks=0
@@ -67,8 +73,12 @@ ssh-keygen -R [localhost]:2223 2> nul
 
 wsl --update
 wsl --set-default-version 2
-wsl --unregister %distro%
+wsl --unregister %distro% >nul
 %distroExe% install --root & REM https://github.com/microsoft/WSL/issues/3369
+if %errorlevel% neq 0 (
+  goto SubsystemFailure
+)
+
 wsl --set-default %distro%
 wsl -u root useradd -m "%username%"
 wsl -u root sh -c "echo "%username%:%password%" | chpasswd"
