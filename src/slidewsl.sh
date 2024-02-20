@@ -48,9 +48,9 @@ curl -fsSL https://rpm.nodesource.com/setup_14.x | grep -v '^[a-z]*_deprecation_
 dnf install -y nodejs-14.20.1
 npm install -g yarn@1.22.19 --no-progress
 
-# custom hosts with wsl subdomain
-sh -c 'echo -e "#!/bin/sh\\nif [[ -n \"\$1\" && -n \"\$2\" ]]; then echo \"\$2\" wsl.\"\$1\" | tee -a /etc/hosts.wsl /etc/hosts; fi" >/usr/local/bin/update-hosts.sh'
-chmod +x /usr/local/bin/update-hosts.sh
+# custom hosts
+sh -c 'echo -e "#!/bin/sh\\nif [[ -n \"\$1\" && -n \"\$2\" ]]; then echo \"\$2\" \"\$1\" | tee -a /etc/hosts.wsl /etc/hosts; fi" >/usr/local/bin/add-host.sh'
+chmod +x /usr/local/bin/add-host.sh
 touch /etc/hosts.wsl
 echo cat /etc/hosts.wsl \>\>/etc/hosts >>/etc/rc.d/rc.local.wsl
 
