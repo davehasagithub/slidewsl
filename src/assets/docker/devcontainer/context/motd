@@ -1,0 +1,8 @@
+
+----------------------------
+Welcome to the devcontainer!
+----------------------------
+
+To start the webapp:
+docker compose --profile web up -d
+

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=JetBrains Toolbox
+Comment=Install JetBrains Toolbox
+Version=1.0
+Icon=applications-development
+Type=Application
+Terminal=false
+Exec=/opt/jetbrains-toolbox-2.2.1.19765/jetbrains-toolbox

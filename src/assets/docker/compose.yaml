@@ -1,0 +1,35 @@
+name: slidewsl
+
+services:
+
+  devcontainer:
+    build:
+      context: devcontainer
+      args:
+        - USER=dev
+        - UID=${WSL_UID}
+        - GID=${WSL_GID}
+    container_name: devcontainer
+    hostname: devcontainer
+    network_mode: host
+    restart: no
+    environment:
+      COMPOSE_FILE: /usr/local/etc/slidewsl/compose.yaml
+    stdin_open: true
+    tty: true
+    volumes:
+      - type: bind
+        read_only: true
+        source: ${COMPOSE_FILE_PATH-}
+        target: /usr/local/etc/slidewsl
+    profiles:
+      - devcontainer
+
+  nginx:
+    image: nginx
+    container_name: nginx
+    ports:
+      - "8000:80"
+    restart: unless-stopped
+    profiles:
+      - web
