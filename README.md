@@ -1,77 +1,72 @@
-<img alt="screenshot" src="./slidewsl.png" width="500" height="281" />
+# SlideWSL
 
-# slidewsl
+The `S`imple `L`inux `I`nterface for `DE`veloping on `WSL` (Slide Whistle!)
 
-The `S`imple `L`inux `I`nterface for `DE`veloping on `WSL`
+With SlideWSL, you can quickly create a custom Oracle Linux environment
+on Windows using just a **single DOS batch file** that runs from CMD with
+no user interaction [^1].
 
-This lone batch file, [getslidewsl.bat](dist/getslidewsl.bat), will build a custom
-graphical Linux environment on Windows. It is accessible by connecting to localhost
-using a remote desktop client such as Microsoft Remote Desktop or FreeRDP. This
-requires WSL2 and uses the Oracle Linux 8.7 distribution with a lightweight XFCE
-desktop. This doesn't require an X11 server, such as VcXsrv or Xming, to be running
-on the Windows host.
-
-To quickly download the latest .bat file, you can run this from CMD:
-
-`powershell iwr -uri "https://raw.githubusercontent.com/davehasagithub/slidewsl/master/dist/getslidewsl.bat" -outfile getslidewsl.bat`
-
-**Very preliminary. Use at your own risk! Note that this script will run wsl --shutdown.**
-
-## Usage
-
-`  getslidewsl <username> <password>  `
-
-## Requirements
-
-- See: https://learn.microsoft.com/en-us/windows/wsl/install-manual
-- Ensure feature is enabled: _Windows Subsystem for Linux_
-- Ensure feature is enabled: _Virtual Machine Platform_
-- Update Subsystem for Linux: https://apps.microsoft.com/detail/9P9TQF7MRM4R
-- Install Oracle Linux 8.7: https://apps.microsoft.com/detail/9NGGZVB0BKD9
+[^1]: Except a Y/N confirmation if an existing distro will be overwritten.
 
 ## Details
 
-Consider this a template for a .bat script that builds a custom WSL distro
-from CMD. It's currently bundled with Docker, NodeJS 14.20.1, Yarn 1.22.19,
-Firefox, Chromium, and JetBrains Toolbox. It runs in under 5m on my machine.
-The resulting distro could then be exported for repeat installs.
+- Companion assets necessary for provisioning are encoded and embedded into
+the lone .bat file in order to achieve maximum portability.
 
-The build script, [build.sh](./build.sh), uses base64 to encode a provisioning
-shell script into chunks that get embedded as variables in the batch file. This
-improves portability by combining two files in one--without manual escaping
-mechanisms. (Basically, it seemed like a clever idea that was fun to implement!)
-But, because this approach could be used to hide nefarious code, I suggest
-inspecting the source and building yourself. I do this with a separate distro:
+- This distro includes an optional graphical environment:
 
-`wsl -d ubuntu /mnt/c/path/slidewsl/build.sh`
+  - A lightweight XFCE desktop is accessible by connecting to _localhost_ from
+a remote desktop client such as Microsoft Remote Desktop or FreeRDP. You won't
+need an X11 server (such as VcXsrv or Xming) running on the Windows host.
+  - This comes with JetBrains Toolbox, plus Firefox and Chromium.
 
-The distro includes `/usr/local/bin/add-host.sh <hostname> <ip>`. It can be
-used to add persistent entries to the hosts file. I'm currently using this to
-add hosts with a _wsl_ subdomain so that a javascript app can reach services
-in an older VirtualBox VM. Basically, I create a new proxy.wsl.conf.json for
-Angular using the wsl subdomain as the target, then `--proxy-config` is used
-to launch the dev server.
+- This also incorporates a Docker _devcontainer_.
+We want to keep the WSL2 distro light. If we're developers, we also want a
+consistent and reproducible environment for all of our tools and dependencies.
+To achieve these goals:
 
-To enable LAN access, create a port forward for Windows and adjust firewalls as
-needed. For example:
+  - SlideWSL installs Docker on the WSL2 host, along with a
+Docker Compose configuration file, a convenient admin script, and Git.
+  - The script will
+use Compose to launch the devcontainer.
+  - The service entry for the devcontainer in
+the Compose configuration will grant it read-only access to the identical
+Compose configuration through a bind mount. This allows it to
+orchestrate all other containers required for our development projects.
+  - Inside the devcontainer, the Docker CLI communicates with the daemon running
+in the WSL2 distro. This works by connecting over a port managed by _socat_ that
+relays into the privileged Docker socket.
 
-```shell
-wsl -e sh -c "ip route show | grep -i default | awk '{ print $3}'"
-netsh interface portproxy add v4tov4 listenport=3390 listenaddress=0.0.0.0 connectport=3390 connectaddress=<ip>
-netsh interface portproxy show all
-netsh interface portproxy delete v4tov4 listenport=3390 listenaddress=0.0.0.0
+
+See [NOTES](./NOTES.md) for other related info,
+and [CHANGELOG](./CHANGELOG.md) for background and the latest updates.
+
+## Warning
+
+This is still experimental. **Use at your own risk!**
+
+## Install
+
+To quickly download the latest .bat file, you can run this from CMD:
+
+```dosbatch
+powershell iwr -uri "https://raw.githubusercontent.com/davehasagithub/slidewsl/master/dist/getslidewsl.bat" -outfile getslidewsl.bat
 ```
 
-Hint: Once up and running, you'll probably do things like:
+## Requirements
 
-```
-# export SOME_ENV_VAR=value
-# git login # or:
-# cp /mnt/c/Users/<name>/.ssh/id_* /mnt/c/Users/<name>/.ssh/config ~/.ssh
-# chmod 600 ~/.ssh/config ~/.ssh/id_*
-# git clone git@example.com:path/project.git ~/src/project
-# yarn --cwd ~/src/project/ install --frozen-lockfile
-# import intellij configs, maybe copy .idea/modules.xml, etc
-```
+- First, be sure to familiarize yourself with WSL2
+- See: https://learn.microsoft.com/en-us/windows/wsl/install-manual
+- Enable Windows feature: _Windows Subsystem for Linux_
+- And the feature: _Virtual Machine Platform_
+- Update Subsystem for Linux: https://apps.microsoft.com/detail/9P9TQF7MRM4R
+- Install Oracle Linux 8.7: https://apps.microsoft.com/detail/9NGGZVB0BKD9
 
-EOF
+## Usage
+
+```dosbatch
+C:\slidewsl>getslidewsl
+Usage: getslidewsl.bat <username> <password> [<uid> <gid>]
+uid is optional. gid is required with uid.
+uid and gid default to 1000 and must be 1000 or greater.
+```
