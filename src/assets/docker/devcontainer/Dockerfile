@@ -10,12 +10,14 @@ SHELL ["/bin/bash", "-c"]
 RUN echo 'hosts: files dns' > /etc/nsswitch.conf \
     && ulimit -n 1024
 
-RUN dnf -y update \
-    && dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo \
+RUN dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+
+RUN --mount=type=cache,target=/var/cache/dnf \
+    dnf makecache \
+    && dnf -y update \
     && dnf install --noplugins -y \
       dnf-utils zip unzip git bash-completion telnet which hostname rsync dos2unix unix2dos sudo \
-      docker-ce-cli \
-    && dnf clean all
+      docker-ce-cli
 
 COPY --chmod=644 context/motd.sh /etc/profile.d
 COPY --chmod=644 context/motd /etc
