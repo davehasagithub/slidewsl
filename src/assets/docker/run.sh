@@ -33,7 +33,7 @@ usage() {
 run_container() {
   status || true
   local recreate=
-  sync
+  sync "$@"
   run_socat
   [ "$1" == 'recreate' ] && recreate='--force-recreate'
   docker compose --profile "$dev_container" up -d $recreate
@@ -68,8 +68,8 @@ sync() {
     $script
     current_timestamp=$(stat -c %Y "$0")
     if [ "$current_timestamp" -gt "$initial_timestamp" ]; then
-      echo "Script has been updated. Relaunching $0"
-      exec "$0"
+      echo "Script has been updated. Relaunching ${ALIAS_USED:-$0}" "$@"
+      exec "$0" "$@"
     else
       echo "Script was not updated. Continuing"
     fi
