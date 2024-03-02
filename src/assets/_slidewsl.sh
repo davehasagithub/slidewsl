@@ -113,6 +113,11 @@ set_up_user() {
       && chmod +x Desktop/jbtoolbox.desktop
   "
 
+  # change detachKeys to prevent conflict with bash control-p for previous command
+  sudo -u "$username" -i sh -c "
+    mkdir -p ~/.docker && cp $assetFolder/docker-config.json ~/.docker/config.json
+  "
+
   cp "$assetFolder/wsl-ps1.sh" /etc/profile.d
   cp "$assetFolder/wsl-aliases.sh" /etc/profile.d
   chmod 644 /etc/profile.d/wsl-ps1.sh
