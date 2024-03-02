@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1
 FROM oraclelinux:8 as os
 
 ARG USER
