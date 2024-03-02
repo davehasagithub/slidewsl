@@ -25,7 +25,7 @@ if not "%3"=="" if "%4"=="" goto ShowUsage
 goto Continue
 
 :ShowUsage
-echo Usage: %~nx0 ^<username^> ^<password^> [^<uid^> ^<gid^>]
+echo Usage: %~nx0 ^<username^> ^<password^> [^<uid^> ^<gid^> [^<path to sync.sh^>]]
 echo uid is optional. gid is required with uid.
 echo uid and gid default to 1000 and must be 1000 or greater.
 exit /b 1
@@ -60,6 +60,7 @@ set "gid=1000"
 if not "%~3" == "" (
   set "uid=%~3"
   set "gid=%~4"
+  set "syncPath=%~5"
 
   call :checkInteger !uid!
   if !errorlevel! equ 1 (
@@ -71,11 +72,19 @@ if not "%~3" == "" (
     echo bad gid
     goto ShowUsage
   )
+
+  if not "!syncPath!" == "" (
+    if not exist "!syncPath!" (
+      echo sync script not found at !syncPath!
+      goto ShowUsage
+    )
+  )
 )
 
 echo user: %username%
 echo uid : %uid%
 echo gid : %gid%
+if not "%syncPath%" == "" echo path: %syncPath%
 
 set "WSL_UTF8=1" & @REM https://github.com/microsoft/WSL/releases/tag/0.64.0
 
@@ -126,6 +135,7 @@ echo wsl shutting down
 wsl --shutdown
 
 echo gathering assets
+rmdir /s /q "%tempProvisionPath%" 2>nul
 mkdir "%tempProvisionPath%" 2>nul
 copy NUL "%tempProvisionPath%/%encodedTgzFile%" >nul
 for /l %%i in (1,1,%num_chunks%) do (
@@ -139,6 +149,11 @@ if not exist "%tempProvisionPath%/%tempProvisionScript%" (
   echo %tempProvisionScript% script is missing.
   echo Aborting.
   exit /b 1
+)
+
+if not "%syncPath%" == "" (
+  echo adding %syncPath%
+  copy "%syncPath%" "%tempProvisionPath%/docker/sync.sh"
 )
 
 echo provisioning
