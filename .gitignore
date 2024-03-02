@@ -93,4 +93,6 @@ fabric.properties
 
 dist/*
 !dist/getslidewsl.bat
-src/assets/docker/sync.sh
+local/*
+!local/.gitkeep
+
