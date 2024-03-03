@@ -3,6 +3,16 @@
 Welcome to the devcontainer!
 ----------------------------
 
-To start the webapp:
-docker compose --profile web up -d
+Remember to clone your workspace in WSL (~/src), before using the devcontainer.
+
+Cheat sheet (admin script coming soon):
+
+angular:
+docker compose run --build --rm angular_node_modules
+docker compose run --build --rm angular_app_build <app>
+APPS="<app> ..." docker compose up --force-recreate --build angular_devserver -d
+
+Example:
+APPS="starter" docker compose up --force-recreate --build angular_devserver -d; \
+  docker compose logs angular_devserver -f
 

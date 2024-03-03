@@ -9,28 +9,31 @@ main() {
   if [[ "$OPT" == "status" ]]; then
     _call status
   elif [[ "$OPT" == "reset" ]]; then
-    _call reset
+    _call reset "$@"
     _call list
   elif [[ "$OPT" == "list" ]]; then
     _call list "$@"
   elif [[ "$OPT" == "recreate" ]]; then
     _call clean_dev_container
     _call run_container
+  elif [[ "$OPT" == "help" ]]; then
+    _call usage
   elif [[ "$OPT" == "" ]]; then
     _call run_container
   else
-    usage
+    echo "unknown option $OPT"
+    _call usage
   fi
 }
 
 usage() {
-  echo "| Usage: ${ALIAS_USED:-$0} [status|reset|list [stats]|recreate|help]"
+  echo "| Usage: ${ALIAS_USED:-$0} [status|reset [cache]|list [stats]|recreate|help]"
   echo "| (If found, $script_path/sync.sh will run first.)"
   echo "| When no argument is provided:"
   echo "|   -Run or reattach to the $dev_container"
   echo "| Optional arguments:"
   echo "|   status: Report if the $dev_container is running"
-  echo "|   reset: Stop and purge all containers and images"
+  echo "|   reset: Purge all containers, images, and optional build cache"
   echo "|   list [stats]: List all containers, images, and optional stats"
   echo "|   recreate: Rebuild the $dev_container image and container"
   echo "|   help: Show this usage info"
@@ -38,6 +41,9 @@ usage() {
 }
 
 reset() {
+  if [[ "$1" == "cache" ]]; then
+    docker builder prune -af
+  fi
   ids=$(docker ps -aq)
   if [[ "$ids" ]]; then
     # shellcheck disable=SC2086
@@ -97,7 +103,7 @@ sync() {
     current_timestamp2=$(stat -c %Y "$script")
     if [[ "$current_timestamp1" -gt "$initial_timestamp1" || "$current_timestamp2" -gt "$initial_timestamp2" ]]; then
       echo ". Script updated. Relaunching..."
-      exec "$0" "$*"
+      exec "$0" "$@"
     else
       echo ". Script not updated. Continuing..."
     fi
@@ -120,11 +126,13 @@ dev_container=devcontainer
 uid=$(id -u)
 gid=$(id -g)
 
-export DOCKER_BUILDKIT=1
 export COMPOSE_FILE="$script_path/compose.yaml"
-export COMPOSE_FILE_PATH="$script_path"
-export WSL_UID="$uid"
-export WSL_GID="$gid"
-export SRC_PATH_FRONTEND=~/src/ng1/frontend
+
+export SLIDEWSL_SRC_MOUNT="$HOME/src"
+export SLIDEWSL_WSL_UID="$uid"
+export SLIDEWSL_WSL_GID="$gid"
+export SLIDEWSL_SCRIPT_PATH="$script_path"
+
+mkdir -p "${SLIDEWSL_SRC_MOUNT}" # otherwise docker will create with root owner
 
 main "$@"

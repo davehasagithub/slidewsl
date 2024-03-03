@@ -3,7 +3,6 @@ FROM oraclelinux:8 as os
 ARG USER
 ARG UID
 ARG GID
-ENV DOCKER_HOST=tcp://127.0.0.1:2376
 SHELL ["/bin/bash", "-c"]
 
 RUN echo 'hosts: files dns' > /etc/nsswitch.conf \
