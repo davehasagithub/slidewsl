@@ -1,8 +1,42 @@
 # Notes
 
-<img alt="screenshot" src="./slidewsl.png" width="500" height="281" />
+_This page includes random notes that could one day become proper documentation._
 
 ### Miscellaneous
+
+- The graphical environment:
+  - A lightweight XFCE desktop is accessible by connecting to _localhost_ from
+      a remote desktop client such as Microsoft Remote Desktop or FreeRDP. You won't
+      need an X11 server (such as VcXsrv or Xming) running on the Windows host.
+  - This comes with JetBrains Toolbox, plus Firefox and Chromium.
+  - <img alt="screenshot" src="./slidewsl.png" width="500" height="281" />
+
+- The devcontainer:
+  - As developers, we want to keep the WSL2 distro light, while also having a
+  consistent and reproducible environment for all of our tools and dependencies.
+  To achieve these goals:
+
+    - SlideWSL installs Docker on the WSL2 host, along with
+      Docker configuration files, container contexts,
+      a convenient admin script, and, of course, Git.
+    - We use Compose to launch the devcontainer (and other containers).
+    - The service entry for the devcontainer in
+      the Compose YAML grants it read-only access to the
+      Docker assets through a bind mount; this allows it to
+      build and orchestrate all other containers.
+    - The devcontainer communicates with the Docker daemon running
+      in the WSL2 distro by connecting through a port managed by _socat_ that
+      relays into the privileged Docker socket.
+    - Local customizations can be achieved through an optional script that
+      runs when initializing the devcontainer.
+  - The devcontainer includes support for Angular. You can perform a one-off installation of
+    node_modules, a build of the app, or launch webpack
+    dev servers.
+    - You will need to create `.env.override` to override `SLIDEWSL_ANGULAR_ROOT`
+    and edit `angular-dev-server.conf.sh` for your projects.
+    - If a project doesn't exist, a demo starter app will be created.
+    - There is no admin script for this stuff yet. Refer to [motd](src/assets/docker/devcontainer/context/motd) for current commands.
+
 
 - The output from WSL2 provisioning can be viewed with `sudo less /root/provision.log`.
 
@@ -11,35 +45,31 @@
   `getslidewsl.bat` allows you to specify the uid/gid for the WSL distro (the defaults are 1000/1000).
   The same uid/gid will be used when creating the non-root user in the devcontainer.
 
-  (As of this writing, the username in the devcontainer is hard-coded as `dev` in compose.yaml.
-This could easily be parameterized or set to match the WSL2 user.)
-
-  ```dosbatch
-  C:\slidewsl>getslidewsl
-  Usage: getslidewsl.bat <username> <password> [<uid> <gid>]
-  uid is optional. gid is required with uid.
-  uid and gid default to 1000 and must be 1000 or greater.
-  ```
-
-  ```bash
-  [dave@wsl ~]$ id
-  uid=7777(dave) gid=8888(dave) groups=8888(dave),994(docker)
-  [dave@wsl ~]$ dc
-  [dev@devcontainer ~]$ id
-  uid=7777(dev) gid=8888(dev) groups=8888(dev)
-
-  ```
+  All other containers will also use this user ID and group ID.
+  They will utilize [fixuid](https://github.com/boxboat/fixuid) to remap the original
+  non-root user that was used during the container's creation.
 
 - What is sync.sh?
 
-  - This is optional and may be removed.
-  - The thinking is that, when launching the devcontainer, it could be handy for prep work, such as running rsync, dos2unix, etc.
-    - Before launching the devcontainer, `run.sh` checks to see if a script called `sync.sh` exists in the same folder as itself.
-      If so, it runs it. On return, if `run.sh` finds that its own timestamp has changed, it restarts itself.
+  - When building or reattaching to the devcontainer, one might want to
+  do prep work or customizations, such as adding or updating file assets, or doing conversions
+  such as dos2unix:
+    - So, before launching the devcontainer (or, actually, first thing whenever the script is called),
+    `run.sh` checks to see if a script called `sync.sh` exists in
+    the same folder as itself.
+    (Remember, `run.sh` is the underlying script called when using the `dc` alias.)
+    - If so, it runs it. And, on return, if `run.sh` finds that the timestamp on `run.sh` (itself) or
+    `sync.sh` has changed, it restarts.
+  - The `.gitignore` file for this project includes `local/`. Place
+  customizations here and let `sync.sh` move them into position.
+  Consider, for example, a custom `motd` or `.env.override`, or an updated `angular-dev-server.conf.sh`.
+  In fact, store your `sync.sh` script there, too.
+  - Your sync script can be placed during the initial install via
+  an argument to getslidewsl.bat.
 
 ### More
 
-- Consider [exporting](https://learn.microsoft.com/en-us/windows/wsl/basic-commands#export-a-distribution) your WSL distro for repeat installs.
+- Remember you could [export](https://learn.microsoft.com/en-us/windows/wsl/basic-commands#export-a-distribution) your WSL distro for repeat installs.
 
 - For LAN access over RDP, adjust firewalls as needed and create a port forward for Windows
 using commands like:
@@ -83,30 +113,38 @@ using commands like:
 
 ### Walkthrough
 
-- This is a basic walkthrough of the current state:
+- This is a basic walkthrough:
   - Install SlideWSL
   - Launch the devcontainer
-  - Start the web server
-  - Exit back to WSL
-  - Install a text-based browser
-  - Visit the nginx welcome page
-- Notice that dc (for devcontainer) is a shell function to call ~/docker/run.sh.
+    - Start the web server
+  - Exit back to WSL (atypical, just as an example)
+    - Install a text-based browser
+    - Visit the nginx welcome page
+  - Return to the devcontainer
+    - Start the Angular dev server
+      - A starter app will be installed because no project exists
+  - Exit back to WSL again (atypical)
+    - Dump source for the starter project (w3m can't render js)
+  - Run dc list stats
+
+---
 
   ```text
-  C:\SlideWSL>getslidewsl dave mypassword 5500 6600
+  C:\SlideWSL>getslidewsl dave mypassword
   user: dave
-  uid : 5500
-  gid : 6600
+  uid : 1000
+  gid : 1000
   OracleLinux_8_7 already exists. do you wish to delete it?
   Enter Y or N: [Y,N]?Y
-  <snip...>
-
+  
+  <snip>
+  
   ----------------------------------------------------------
   
   Done!
   
-  Start: 20:00:22.86
-  End  : 20:04:55.29
+  Start: 12:38:16.69
+  End  : 12:41:43.60
   
   Now run  Windows Remote Desktop  (mstsc.exe)
   Use the computer location: localhost:3390
@@ -120,42 +158,25 @@ using commands like:
   ----------------------------------------------------------
   
   C:\SlideWSL>wsl
-  [dave@wsl ~]$
-
-  [dave@wsl ~]$ which dc
-  dc ()
-  {
-      ( export ALIAS_USED=dc;
-      ~/docker/run.sh "$@" )
-  }
-
+  
   [dave@wsl ~]$ dc help
-  | Usage: dc [status|clean|recreate|help]
+  | Usage: dc [status|reset [cache]|list [stats]|recreate|help]
+  | (If found, /home/dave/docker/sync.sh will run first.)
   | When no argument is provided:
   |   -Run or reattach to the devcontainer
-  |    (If found, /home/dave/docker/sync.sh will run first.)
   | Optional arguments:
-  |   status: Check if the devcontainer is running
-  |   clean: Purge related containers and images
-  |   recreate: Force rebuild of the devcontainer
+  |   status: Report if the devcontainer is running
+  |   reset: Purge all containers, images, and optional build cache
+  |   list [stats]: List all containers, images, and optional stats
+  |   recreate: Rebuild the devcontainer image and container
   |   help: Show this usage info
   
-  [dave@wsl ~]$ dc status
-  The devcontainer is not running
-
   [dave@wsl ~]$ dc
-  The devcontainer is not running
-  Running sync.sh
-  Script was not updated. Continuing
-  Launching socat
   ✔ Container devcontainer Started
   
   ----------------------------
   Welcome to the devcontainer!
   ----------------------------
-  
-  To start the webapp:
-  docker compose --profile web up -d
   
   [dev@devcontainer ~]$ docker compose --profile web up -d
   ✔ Container nginx Started
@@ -176,6 +197,92 @@ using commands like:
   Commercial support is available at nginx.com.
   
   Thank you for using nginx.
+  
+  [dave@wsl ~]$ dc
+  ✔ Container devcontainer Running
+  
+  ----------------------------
+  Welcome to the devcontainer!
+  ----------------------------
+  
+  [dev@devcontainer ~]$ APPS="starter" docker compose up --force-recreate --build angular_devserver -d
+  ✔ Container angular_devserver Started
+  
+  [dev@devcontainer ~]$ docker compose logs angular_devserver -f
+  angular_devserver  | fixuid: fixuid should only ever be used on development systems. DO NOT USE IN PRODUCTION
+  angular_devserver  | fixuid: runtime UID '1000' already matches container user 'node' UID
+  angular_devserver  | fixuid: runtime GID '1000' already matches container group 'node' GID
+  angular_devserver  | ----------> checking /app/angular... fixing!
+  angular_devserver  | ----------> creating demo project: angular
+  angular_devserver  | CREATE README.md (1061 bytes)
+  angular_devserver  | CREATE .editorconfig (274 bytes)
+  angular_devserver  | <snip>
+  angular_devserver  | - Installing packages (yarn)...
+  angular_devserver  | ✔ Packages installed successfully.
+  angular_devserver  | ----------> generating application: starter
+  angular_devserver  | yarn run v1.22.19
+  angular_devserver  | $ ng generate application starter --routing=true --style=scss
+  angular_devserver  | CREATE projects/starter/tsconfig.app.json (271 bytes)
+  angular_devserver  | CREATE projects/starter/tsconfig.spec.json (281 bytes)
+  angular_devserver  | <snip>
+  angular_devserver  | UPDATE angular.json (3127 bytes)
+  angular_devserver  | UPDATE package.json (1039 bytes)
+  angular_devserver  | - Installing packages (yarn)...
+  angular_devserver  | ✔ Packages installed successfully.
+  angular_devserver  | Done in 24.35s.
+  angular_devserver  | ----------> done! back to it...
+  angular_devserver  | yarn install v1.22.19
+  angular_devserver  | [1/4] Resolving packages...
+  angular_devserver  | success Already up-to-date.
+  angular_devserver  | Done in 0.45s.
+  angular_devserver  | starting webpack dev server(s) for: starter
+  angular_devserver  | running ng serve starter --port 4205 --host=0.0.0.0
+  angular_devserver  | (if starter doesn't exist, you might see the error: Unknown arguments)
+  angular_devserver  | done
+  ^C
+  
+  [dev@devcontainer ~]$ exit
+  
+  [dave@wsl ~]$ w3m -dump_source http://localhost:4205/
+  <!doctype html>
+  <html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Starter</title>
+    <base href="/">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="styles.css"></head>
+  <body>
+    <app-root></app-root>
+  <script src="runtime.js" type="module"></script><script src="polyfills.js" type="module"></script><script src="styles.js" defer></script>
+    <script src="vendor.js" type="module"></script><script src="main.js" type="module"></script></body>
+  </html>
+  
+  [dave@wsl ~]$ dc list stats
+  
+  images
+  REPOSITORY                      TAG       IMAGE ID       CREATED          SIZE
+  slidewsl-angular_devserver      latest    cc6022e7cd34   7 minutes ago    995MB
+  slidewsl-angular_app_build      latest    2f71e715053c   8 minutes ago    995MB
+  slidewsl-angular_node_modules   latest    0c72cfb54798   8 minutes ago    995MB
+  slidewsl-devcontainer           latest    e7bb5dbda175   10 minutes ago   563MB
+  alpine/socat                    latest    d38d2ef29645   3 days ago       8.64MB
+  nginx                           latest    e4720093a3c1   2 weeks ago      187MB
+  
+  containers
+  CONTAINER ID   IMAGE                        COMMAND                  CREATED          STATUS          PORTS                                   NAMES
+  419c303df13f   slidewsl-angular_devserver   "/bin/bash -c 'fixui…"   7 minutes ago    Up 7 minutes    0.0.0.0:4200-4210->4200-4210/tcp        angular_devserver
+  10df68492303   nginx                        "/docker-entrypoint.…"   8 minutes ago    Up 8 minutes    0.0.0.0:8000->80/tcp, :::8000->80/tcp   nginx
+  cef24ed588e4   slidewsl-devcontainer        "/bin/bash -c 'sleep…"   10 minutes ago   Up 10 minutes                                           devcontainer
+  f522289d81fa   alpine/socat                 "socat tcp-listen:40…"   11 minutes ago   Up 11 minutes   127.0.0.1:2376->4000/tcp                socat
+  
+  stats
+  CONTAINER ID   NAME                CPU %     MEM USAGE / LIMIT     MEM %     NET I/O           BLOCK I/O   PIDS
+  419c303df13f   angular_devserver   0.04%     792.9MiB / 15.56GiB   4.98%     163MB / 4.11MB    0B / 0B     16
+  10df68492303   nginx               0.00%     7.152MiB / 15.56GiB   0.04%     2.25kB / 1.34kB   0B / 0B     9
+  cef24ed588e4   devcontainer        0.00%     592KiB / 15.56GiB     0.00%     0B / 0B           0B / 0B     1
+  f522289d81fa   socat               0.00%     884KiB / 15.56GiB     0.01%     299kB / 671kB     0B / 0B     1
   
   [dave@wsl ~]$
   ```
