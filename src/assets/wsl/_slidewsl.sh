@@ -10,6 +10,8 @@ main() {
   _call install_sshd
   _call install_browsers
   _call install_jetbrains_toolbox
+  _call set_up_env
+  _call set_up_skel
   _call set_up_user
 }
 
@@ -95,37 +97,48 @@ install_browsers() {
 install_jetbrains_toolbox() {
   dnf install -y fuse fuse-libs
   jbToolbox=jetbrains-toolbox-2.2.1.19765.tar.gz
-  curl -sLO https://download.jetbrains.com/toolbox/$jbToolbox
-  tar -xzf $jbToolbox -C /opt
-  rm $jbToolbox
+  curl -sL https://download.jetbrains.com/toolbox/$jbToolbox | tar -C /opt -xzf -
+}
+
+set_up_env() {
+  cp "$assetFolder/wsl-env.sh" /etc/profile.d
+  cp "$assetFolder/wsl-ps1.sh" /etc/profile.d
+  cp "$assetFolder/wsl-aliases.sh" /etc/profile.d
+  cp "$assetFolder/motd.sh" /etc/profile.d
+  chmod 644 /etc/profile.d/wsl-env.sh
+  chmod 644 /etc/profile.d/wsl-ps1.sh
+  chmod 644 /etc/profile.d/wsl-aliases.sh
+  chmod 644 /etc/profile.d/motd.sh
+
+  curl -sL -o /usr/local/bin/daveml.sh https://raw.githubusercontent.com/davehasagithub/daveml/main/daveml.sh
+  chmod 755 /usr/local/bin/daveml.sh
+
+  cp "$assetFolder/motd" /etc
+}
+
+set_up_skel() {
+  # prevent conflict with bash control-p for previous command
+  mkdir -p /etc/skel/.docker
+  cp "$assetFolder"/docker-config.json /etc/skel/.docker/config.json
+
+  echo "cd ~" >>/etc/skel/.bashrc;
 }
 
 set_up_user() {
+  useradd "$username" --create-home
   usermod -aG docker "$username"
 
+  echo "$username:%password%" | chpasswd
   echo "$username ALL=(ALL) NOPASSWD:ALL" | sudo tee -a "/etc/sudoers.d/$username"
   chmod 440 "/etc/sudoers.d/$username"
 
   sudo -u "$username" -i sh -c "
-    echo cd ~>>~/.bashrc; \
     mkdir -p Desktop \
       && cp $assetFolder/jbtoolbox.desktop Desktop \
       && chmod +x Desktop/jbtoolbox.desktop
   "
 
-  # change detachKeys to prevent conflict with bash control-p for previous command
-  sudo -u "$username" -i sh -c "
-    mkdir -p ~/.docker && cp $assetFolder/docker-config.json ~/.docker/config.json
-  "
-
-  cp "$assetFolder/wsl-ps1.sh" /etc/profile.d
-  cp "$assetFolder/wsl-aliases.sh" /etc/profile.d
-  chmod 644 /etc/profile.d/wsl-ps1.sh
-  chmod 644 /etc/profile.d/wsl-aliases.sh
-
-  sudo -u "$username" -i sh -c "
-    rsync -av \"$assetFolder/docker/\" ./docker
-  "
+  rsync -av "$assetFolder/../docker/" /docker
 }
 
 # -----------------------------------

@@ -21,13 +21,10 @@ set distroExe=oraclelinux87
 
 if "%~1" == "" goto ShowUsage
 if "%~2" == "" goto ShowUsage
-if not "%3"=="" if "%4"=="" goto ShowUsage
 goto Continue
 
 :ShowUsage
-echo Usage: %~nx0 ^<username^> ^<password^> [^<uid^> ^<gid^> [^<path to sync.sh^>]]
-echo uid is optional. gid is required with uid.
-echo uid and gid default to 1000 and must be 1000 or greater.
+echo Usage: %~nx0 ^<username^> ^<password^> [^<path to sync.sh^>]
 exit /b 1
 
 :SubsystemFailure
@@ -39,52 +36,20 @@ echo Update: https://apps.microsoft.com/detail/9P9TQF7MRM4R
 echo Install: https://apps.microsoft.com/detail/9NGGZVB0BKD9
 exit /b 1
 
-:checkInteger
-set "varToCheck=%~1"
-echo !varToCheck!| findstr /R "[^0-9]" >nul
-if errorlevel 1 (
-  set /a num=!varToCheck!
-  if !num! GEQ 1000 (
-    exit /b 0
-  )
-  exit /b 1
-)
-exit /b 1
-
 :Continue
 set "username=%~1"
 set "password=%~2"
+set "syncPath=%~3"
 
-set "uid=1000"
-set "gid=1000"
-if not "%~3" == "" (
-  set "uid=%~3"
-  set "gid=%~4"
-  set "syncPath=%~5"
-
-  call :checkInteger !uid!
-  if !errorlevel! equ 1 (
-    echo bad uid
+if not "!syncPath!" == "" (
+  if not exist "!syncPath!" (
+    echo sync script not found at !syncPath!
     goto ShowUsage
-  )
-  call :checkInteger !gid!
-  if !errorlevel! equ 1 (
-    echo bad gid
-    goto ShowUsage
-  )
-
-  if not "!syncPath!" == "" (
-    if not exist "!syncPath!" (
-      echo sync script not found at !syncPath!
-      goto ShowUsage
-    )
   )
 )
 
 echo user: %username%
-echo uid : %uid%
-echo gid : %gid%
-if not "%syncPath%" == "" echo path: %syncPath%
+if not "%syncPath%" == "" echo sync: %syncPath%
 
 set "WSL_UTF8=1" & @REM https://github.com/microsoft/WSL/releases/tag/0.64.0
 
@@ -123,14 +88,10 @@ if %errorlevel% neq 0 (
 )
 
 wsl --set-default %distro%
-wsl -u root sh -c "groupadd --gid "%gid%" "%username%""
-wsl -u root sh -c "useradd "%username%" --create-home --uid "%uid%" --gid "%gid%""
-wsl -u root sh -c "echo "%username%:%password%" | chpasswd"
 wsl -u root -e sh -c "echo -e [user]\\ndefault=%username% >/etc/wsl.conf"
 wsl -u root -e sh -c "echo -e [boot]\\nsystemd=true >>/etc/wsl.conf"
 wsl -u root -e sh -c "echo -e [interop]\\nenabled=false\\nappendWindowsPath=false >>/etc/wsl.conf"
 wsl -u root -e sh -c "dnf install -y dos2unix"
-
 echo wsl shutting down
 wsl --shutdown
 
@@ -139,13 +100,13 @@ rmdir /s /q "%tempProvisionPath%" 2>nul
 mkdir "%tempProvisionPath%" 2>nul
 copy NUL "%tempProvisionPath%/%encodedTgzFile%" >nul
 for /l %%i in (1,1,%num_chunks%) do (
-  echo|set /p="!asset_encoded_tar_%%i!" | wsl -e sh -c "base64 -d >>%tempProvisionPath%/%encodedTgzFile%"
+  echo|set /p="!asset_encoded_tar_%%i!" | wsl -u root -e sh -c "base64 -d >>%tempProvisionPath%/%encodedTgzFile%"
 )
 echo extracting
-wsl -e sh -c "xxd -r -p <%tempProvisionPath%/%encodedTgzFile% | tar xzvf - -C %tempProvisionPath%"
-wsl -e sh -c "find %tempProvisionPath% -type f \( -not -name *.enc \) -exec dos2unix -ic0 {} + | xargs -0 dos2unix"
+wsl -u root -e sh -c "xxd -r -p <%tempProvisionPath%/%encodedTgzFile% | tar xzvf - -C %tempProvisionPath%"
+wsl -u root -e sh -c "find %tempProvisionPath% -type f \( -not -name *.enc \) -exec dos2unix -ic0 {} + | xargs -0 dos2unix"
 
-if not exist "%tempProvisionPath%/%tempProvisionScript%" (
+if not exist "%tempProvisionPath%/wsl/%tempProvisionScript%" (
   echo %tempProvisionScript% script is missing.
   echo Aborting.
   exit /b 1
@@ -158,7 +119,7 @@ if not "%syncPath%" == "" (
 
 echo provisioning
 @REM -------------------------------------------------------------------------------------------
-wsl -u root -e sh -c "cd \"%tempProvisionPath%\"; bash \"%tempProvisionScript%\" \"%username%\""
+wsl -u root -e sh -c "cd \"%tempProvisionPath%/wsl\"; bash \"%tempProvisionScript%\" \"%username%\""
 @REM -------------------------------------------------------------------------------------------
 
 if %errorlevel% neq 0 (
@@ -181,7 +142,6 @@ rmdir /s /q "%tempProvisionPath%"
   echo. echo -e " Username: %username% (and the password you provided)\n"
   echo. echo -e " Or, for a terminal: wsl or %distroExe%"
   echo. echo -e " Or, for ssh: ssh %username%@localhost -p 2223\n"
-  echo. echo -e " To launch the devcontainer: dc help\n"
   echo. echo -e "----------------------------------------------------------"
 
 ) | wsl -e sh -c "tr -d '\r'" | wsl
