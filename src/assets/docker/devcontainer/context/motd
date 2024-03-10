@@ -1,18 +1,26 @@
 
-----------------------------
-Welcome to the devcontainer!
-----------------------------
+<WBB>|                                  |
+<WBB>|   Welcome to the devcontainer!   |
+<WBB>|                                  |
 
-Remember to clone your workspace in WSL (~/src), before using the devcontainer.
+<GXX>Service management
+ <WBX>nginx and php-fpm:
+  <CXX>docker compose up -d
+  (To rebuild: docker compose down -d; docker compose up -d --build)
+ <WBX>angular webpack dev server:
+  <CXX>APPS="<YXX><app> ...<CXX>" docker compose up --force-recreate angular_dev_server -d
 
-Cheat sheet (admin script coming soon):
+<GXX>One-offs
+ <CXX>docker compose run --build --rm angular_node_modules
+ <CXX>docker compose run --build --rm angular_app_build <YXX><app> [<base-href> [<other-args...>]]
+ <CXX>docker compose run --build --rm php-composer
 
-angular:
-docker compose run --build --rm angular_node_modules
-docker compose run --build --rm angular_app_build <app>
-APPS="<app> ..." docker compose up --force-recreate --build angular_devserver -d
+<GXX>Create starter projects (if starting without an existing project)
+ <CXX>docker compose run --build --rm angular_create_starter <YXX><app>
+ <CXX>docker compose run --build --rm laravel_create_starter
 
-Example:
-APPS="starter" docker compose up --force-recreate --build angular_devserver -d; \
-  docker compose logs angular_devserver -f
+<GXX>Tail the logs: <CXX>docker compose logs nginx php-fpm angular_dev_server -f
+<GXX>Interactive Terminal: <CXX>docker compose exec -it -u root <YXX><service><CXX> bash
+
+<WBX>Use <RBX>dchelp<WBX> to redisplay this info.
 

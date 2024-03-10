@@ -1,5 +1,8 @@
 name: slidewsl
 
+networks:
+  fpm:
+
 services:
 
   # --------------------------------------------------------------------------------
@@ -9,40 +12,25 @@ services:
     build:
       context: devcontainer
       args:
-        - USER=${SLIDEWSL_USERNAME}
-        - UID=${SLIDEWSL_WSL_UID}
-        - GID=${SLIDEWSL_WSL_GID}
+        - USER=${USER}
+      additional_contexts:
+        shared: _shared
     hostname: devcontainer
     network_mode: host
-    restart: no
     env_file:
       - .env
       - path: .env.override
         required: false
-    environment:
-      DOCKER_HOST: ${SLIDEWSL_DOCKER_HOST_IN_CONTAINER}
-      COMPOSE_FILE: ${SLIDEWSL_COMPOSE_FILE_PATH_IN_CONTAINER}/compose.yaml
     stdin_open: true
     tty: true
     volumes:
-      - ${SLIDEWSL_SRC_MOUNT}:${SLIDEWSL_SRC_MOUNT_IN_CONTAINER}
-      - ${SLIDEWSL_SCRIPT_PATH}:${SLIDEWSL_COMPOSE_FILE_PATH_IN_CONTAINER}:ro
-      - /etc/timezone:/etc/timezone:ro
+      - /docker:/docker:ro
       - /etc/localtime:/etc/localtime:ro
     profiles:
       - devcontainer
 
   # --------------------------------------------------------------------------------
-
-  nginx:
-    container_name: nginx
-    image: nginx
-    ports:
-      - "8000:80"
-    restart: unless-stopped
-    profiles:
-      - web
-
+  # --------------------------------------------------------------------------------
   # --------------------------------------------------------------------------------
 
   angular_node_modules:
@@ -51,24 +39,36 @@ services:
       target: node_base
       additional_contexts:
         shared: _shared
-    user: "${SLIDEWSL_WSL_UID}:${SLIDEWSL_WSL_GID}"
+    user: "${WSL_UID}:${WSL_GID}"
     environment:
-      ANGULAR_ROOT: ${SLIDEWSL_ANGULAR_ROOT}
+      ANGULAR_ROOT: /angular
     volumes:
-      # bind mount the top-level, so we don't automatically create the subfolder as root;
-      # instead, we'll build it out as needed at runtime as part of the entrypoint
-      - ${SLIDEWSL_SRC_MOUNT}:${SLIDEWSL_SRC_MOUNT_IN_CONTAINER}
+      - ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}:/angular
+      - /etc/localtime:/etc/localtime:ro
     deploy:
       replicas: 0
+    profiles:
+      - angular_node_modules
+
+  angular_create_starter:
+    extends:
+      service: angular_node_modules
+    build:
+      target: starter
+    profiles:
+      - angular_create_starter
 
   angular_app_build:
     extends:
       service: angular_node_modules
     build:
       target: app_build
+    profiles:
+      - angular_app_build
 
-  angular_devserver:
-    container_name: angular_devserver
+  angular_dev_server:
+    container_name: angular_dev_server
+    #restart: unless-stopped
     extends:
       service: angular_node_modules
     build:
@@ -76,10 +76,85 @@ services:
     environment:
       APPS: ${APPS:-unknown}
     ports:
-      - 0.0.0.0:4200-4210:4200-4210
+      - "0.0.0.0:4300-4310:4300-4310"
     deploy:
       replicas: 1
+    depends_on:
+      - nginx
     profiles:
-      - devserver
+      - angular_dev_server
+
+  # --------------------------------------------------------------------------------
+  # --------------------------------------------------------------------------------
+  # --------------------------------------------------------------------------------
+
+  nginx:
+    container_name: nginx
+    #restart: unless-stopped
+    build:
+      context: nginx
+      additional_contexts:
+        shared: _shared
+    user: "${WSL_UID}:${WSL_GID}"
+    ports:
+      - "0.0.0.0:4200-4210:4200-4210"
+      - "0.0.0.0:80:8080"
+    networks:
+      - default
+      - fpm
+    volumes:
+      - /docker/nginx/templates:/etc/nginx/templates:ro
+      - ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}:/angular
+      - ${SLIDEWSL_LARAVEL_ROOT_IN_WSL}:/laravel
+      - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/webroot
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - php-fpm
+    #profiles:
+    #  - nginx
+
+  # --------------------------------------------------------------------------------
+  # --------------------------------------------------------------------------------
+  # --------------------------------------------------------------------------------
+
+  php-composer:
+    build:
+      context: php
+      target: base
+      additional_contexts:
+        shared: _shared
+    user: "${WSL_UID}:${WSL_GID}"
+    environment:
+      LP_INSTANCE: local
+    volumes:
+      - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/webroot
+      - ${SLIDEWSL_LARAVEL_ROOT_IN_WSL}:/laravel
+      - /etc/localtime:/etc/localtime:ro
+    deploy:
+      replicas: 0
+    #profiles:
+    #  - php-composer
+
+  laravel_create_starter:
+    extends:
+      service: php-composer
+    build:
+      target: starter
+    profiles:
+      - laravel_create_starter
+
+  php-fpm:
+    container_name: php-fpm
+    #restart: unless-stopped
+    extends:
+      service: php-composer
+    build:
+      target: fpm
+    networks:
+      - fpm
+    deploy:
+      replicas: 1
+    #profiles:
+    #  - php-fpm
 
   # --------------------------------------------------------------------------------

@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
 main() {
-  sync "$@"
-
   OPT="${1:-}"
   shift
 
@@ -13,9 +11,8 @@ main() {
     _call list
   elif [[ "$OPT" == "list" ]]; then
     _call list "$@"
-  elif [[ "$OPT" == "recreate" ]]; then
-    _call clean_dev_container
-    _call run_container
+  elif [[ "$OPT" == "clean" ]]; then
+    _call clean
   elif [[ "$OPT" == "help" ]]; then
     _call usage
   elif [[ "$OPT" == "" ]]; then
@@ -27,16 +24,24 @@ main() {
 }
 
 usage() {
-  echo "| Usage: ${ALIAS_USED:-$0} [status|reset [cache]|list [stats]|recreate|help]"
-  echo "| (If found, $script_path/sync.sh will run first.)"
+  echo "|"
+  echo "| Usage:"
+  echo "| ${ALIAS_USED:-$0} [status|reset [cache]|list [stats]|clean|help]"
+  # echo "|"
+  # echo "| (If found, /docker/sync.sh will run first.)"
+  echo "|"
   echo "| When no argument is provided:"
   echo "|   -Run or reattach to the $dev_container"
+  echo "|"
   echo "| Optional arguments:"
   echo "|   status: Report if the $dev_container is running"
-  echo "|   reset: Purge all containers, images, and optional build cache"
-  echo "|   list [stats]: List all containers, images, and optional stats"
-  echo "|   recreate: Rebuild the $dev_container image and container"
+  echo "|   reset [cache]: Purge all containers, images, and (optional) build cache"
+  echo "|   list [stats]: List all containers, images, and (optional) stats"
+  echo "|   clean: Stop and remove the $dev_container container and image"
   echo "|   help: Show this usage info"
+  echo "|"
+  echo "| Aliases: dcl = dc-launcher = /docker/devcontainer-launcher.sh"
+  echo "|"
   return 1
 }
 
@@ -51,16 +56,23 @@ reset() {
   fi
   docker container prune -f || true
   docker image prune -af || true
+  echo "done"
 }
 
-clean_dev_container() {
-  docker compose down --rmi all -t 2 "$dev_container" || true
+clean() {
+  docker compose down --rmi all "$dev_container" 2>&1 || true
+  docker container rm -f "$dev_container" >/dev/null 2>&1 || true
+  docker image rm -f "$dev_container" >/dev/null 2>&1 || true
+  echo "done"
 }
 
 run_container() {
   run_socat
   docker compose up -d "$dev_container"
   docker compose exec -it "$dev_container" bash
+  echo "|"
+  echo "| Welcome back!"
+  . /etc/profile.d/motd.sh
 }
 
 list() {
@@ -93,19 +105,21 @@ run_socat() {
 }
 
 sync() {
-  script="$script_path/sync.sh"
+  script="/docker/sync.sh"
   if [ -f "$script" ]; then
-    echo -n "Running sync.sh"
+    echo "Running sync.sh"
     initial_timestamp1=$(stat -c %Y "$0")
     initial_timestamp2=$(stat -c %Y "$script")
-    $script
+    # don't run directly, the script itself could be updated while running
+    cp "$script" /tmp/sync.sh
+    chmod u+x /tmp/sync.sh
+    /tmp/sync.sh
+    rm /tmp/sync.sh
     current_timestamp1=$(stat -c %Y "$0")
     current_timestamp2=$(stat -c %Y "$script")
     if [[ "$current_timestamp1" -gt "$initial_timestamp1" || "$current_timestamp2" -gt "$initial_timestamp2" ]]; then
-      echo ". Script updated. Relaunching..."
+      echo "Script updated. Relaunching..."
       exec "$0" "$@"
-    else
-      echo ". Script not updated. Continuing..."
     fi
   fi
 }
@@ -117,22 +131,38 @@ status() {
   return $result
 }
 
+make_folder() {
+  local folder=$1
+  if [[ -n "$folder" && ! -d "$folder" ]]; then
+    echo "creating angular root: $folder"
+    if ! mkdir -p "$folder"; then
+      exit 1
+    fi
+  fi
+}
+
+ensure_folders_exist() {
+  (
+    source "/docker/.env" 2>/dev/null || true
+    source "/docker/.env.override" 2>/dev/null || true
+    make_folder "$SLIDEWSL_ANGULAR_ROOT_IN_WSL"
+    make_folder "$SLIDEWSL_LARAVEL_ROOT_IN_WSL"
+    make_folder "$SLIDEWSL_WEB_ROOT_IN_WSL"
+  )
+  subshell_exit_code=$?
+  if [ "$subshell_exit_code" -ne 0 ]; then
+    exit $subshell_exit_code;
+  fi
+}
+
 _call() {
   func=${1:-}; shift; $func "$@"
 }
 
-script_path=$(cd "$(dirname "$0")" && pwd)
+# ---------------------------------------------------------------------------
+
 dev_container=devcontainer
-uid=$(id -u)
-gid=$(id -g)
 
-export COMPOSE_FILE="$script_path/compose.yaml"
-
-export SLIDEWSL_SRC_MOUNT="$HOME/src"
-export SLIDEWSL_WSL_UID="$uid"
-export SLIDEWSL_WSL_GID="$gid"
-export SLIDEWSL_SCRIPT_PATH="$script_path"
-
-mkdir -p "${SLIDEWSL_SRC_MOUNT}" # otherwise docker will create with root owner
-
+sync "$@"
+ensure_folders_exist
 main "$@"
