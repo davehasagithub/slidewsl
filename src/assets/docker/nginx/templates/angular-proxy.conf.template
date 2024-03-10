@@ -1,0 +1,31 @@
+# For the angular webpack dev server
+
+# Browser will hit the 4200 port block on nginx, then we'll proxy
+# over the docker network to the webpack dev server 4300 port block.
+
+map $server_port $angular_port {
+  4200 4300;
+  4201 4301;
+  4202 4302;
+  4203 4303;
+  4204 4304;
+  4205 4305;
+  4206 4306;
+  4207 4307;
+  4208 4308;
+  4209 4309;
+  4210 4310;
+}
+
+server {
+  listen 4200-4210;
+
+  location / {
+    resolver 127.0.0.11; # https://stackoverflow.com/a/22259088
+    proxy_pass http://angular_dev_server:$angular_port;
+    proxy_set_header Host localhost;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}

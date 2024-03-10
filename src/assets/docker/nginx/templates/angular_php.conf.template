@@ -1,0 +1,43 @@
+# For serving builds of our angular apps
+
+# By default, we'll use the domain to calculate the root subfolder under
+# /dist For example, foo.com or local.foo.com will map to /angular/dist/foo.
+# The example 'bar' entry is an alternative approach using a direct mapping.
+#
+# If you need to customize this further, consider creating your own config
+# in /local, such as nginx.custom.conf, and create your own map to override
+# this one. Then, use sync.sh to move it into the ./nginx folder.
+
+map $host $dist_root {
+  default unknown;
+  local.bar.com /some/other/folder;
+  ~^((?<subdomain>[^.]+)\.)*(?<domain>[^.]+)\.(com|org)$ /angular/dist/$domain;
+}
+
+include /etc/nginx/nginx.*.conf;
+
+server {
+    listen       8080;
+    server_name  localhost;
+
+    root $dist_root;
+
+    add_header X-Dist-Root $dist_root always;
+
+    location / {
+      index index.html;
+      try_files $uri $uri/ /index.html$is_args$args =404;
+    }
+
+    location /api {
+      alias /laravel/public;
+      try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~ [^/]\.php$ {
+      include fastcgi_params;
+      fastcgi_param SCRIPT_FILENAME /laravel/public/index.php;
+      fastcgi_param SCRIPT_NAME     '/api/index.php';
+      fastcgi_pass  php-fpm:9000;
+    }
+}
