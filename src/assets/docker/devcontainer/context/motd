@@ -1,12 +1,12 @@
 
 <WBB>|                                  |
 <WBB>|   Welcome to the devcontainer!   |
+<WBB>|    (Admin script coming soon)    |
 <WBB>|                                  |
 
 <GXX>Service management
  <WBX>nginx and php-fpm:
   <CXX>docker compose up -d
-  (To rebuild: docker compose down -d; docker compose up -d --build)
  <WBX>angular webpack dev server:
   <CXX>APPS="<YXX><app> ...<CXX>" docker compose up --force-recreate angular_dev_server -d
 
@@ -21,6 +21,12 @@
 
 <GXX>Tail the logs: <CXX>docker compose logs nginx php-fpm angular_dev_server -f
 <GXX>Interactive Terminal: <CXX>docker compose exec -it -u root <YXX><service><CXX> bash
+
+Problems? You can always exit back to WSL and run <CXX>dcl reset<CLR>. Or:
+<GXX>docker compose down --rmi all nginx php-fpm angular_dev_server; \
+<GXX>docker compose up -d; \
+<GXX>APPS="<YXX>...<GXX>" docker compose up --force-recreate angular_dev_server -d; \
+<GXX>docker compose logs nginx php-fpm angular_dev_server -f
 
 <WBX>Use <RBX>dchelp<WBX> to redisplay this info.
 

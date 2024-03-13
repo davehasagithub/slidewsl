@@ -2,25 +2,28 @@
 
 The `S`imple `L`inux `I`nterface for `DE`veloping on `WSL` (Slide Whistle!)
 
-With SlideWSL, you can quickly create a custom Oracle Linux environment
+With SlideWSL, you can quickly create a custom Linux development environment
 on Windows using just a **single DOS batch file** that runs from CMD with
 no user interaction [^1].
 
-[^1]: Except a Y/N confirmation if an existing distro will be overwritten.
+[^1]: Except a Y/N confirmation if an existing distro will be overwritten,
+or if the WSL update triggers UAC.
 
-## Details
+The built-in development environment is an opinionated set of containers for
+Angular, Laravel, and nginx. While it does allow for some customization, it
+could also serve as a foundation for creating something tailored to your needs.
 
-- Companion assets necessary for provisioning are encoded and embedded into
-the lone .bat file in order to achieve maximum portability.
-- This distro includes an optional graphical environment.
-- This also incorporates a Docker _devcontainer_.
+- Uses Oracle Linux 8.
+- Companion assets embedded into a lone .bat file.
+- Includes an optional graphical environment.
+- Incorporates a Docker _devcontainer_.
 
 See [NOTES](./NOTES.md) for details,
 and [CHANGELOG](./CHANGELOG.md) for background.
 
 ## Warning
 
-This is still experimental. **Use at your own risk!**
+This is experimental. **Use at your own risk!**
 
 ## Install
 
@@ -42,8 +45,5 @@ powershell iwr -uri "https://raw.githubusercontent.com/davehasagithub/slidewsl/m
 ## Usage
 
 ```dosbatch
-C:\slidewsl>getslidewsl
-Usage: getslidewsl.bat <username> <password> [<uid> <gid> [<path to sync.sh>]]
-uid is optional. gid is required with uid.
-uid and gid default to 1000 and must be 1000 or greater.
+getslidewsl.bat <username> <password> [<path to sync.sh>]
 ```
