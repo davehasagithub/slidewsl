@@ -19,7 +19,7 @@ services:
     network_mode: host
     env_file:
       - .env
-      - path: .env.override
+      - path: .env.devcontainer
         required: false
     stdin_open: true
     tty: true
@@ -45,6 +45,9 @@ services:
     volumes:
       - ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}:/angular
       - /etc/localtime:/etc/localtime:ro
+    env_file:
+      - path: .env.angular_dev_server
+        required: false
     deploy:
       replicas: 0
     profiles:
@@ -108,6 +111,9 @@ services:
       - ${SLIDEWSL_LARAVEL_ROOT_IN_WSL}:/laravel
       - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/webroot
       - /etc/localtime:/etc/localtime:ro
+    env_file:
+      - path: .env.nginx
+        required: false
     depends_on:
       - php-fpm
     #profiles:
@@ -124,12 +130,13 @@ services:
       additional_contexts:
         shared: _shared
     user: "${WSL_UID}:${WSL_GID}"
-    environment:
-      LP_INSTANCE: local
     volumes:
       - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/webroot
       - ${SLIDEWSL_LARAVEL_ROOT_IN_WSL}:/laravel
       - /etc/localtime:/etc/localtime:ro
+    env_file:
+      - path: .env.php
+        required: false
     deploy:
       replicas: 0
     #profiles:

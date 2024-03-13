@@ -144,7 +144,7 @@ make_folder() {
 ensure_folders_exist() {
   (
     source "/docker/.env" 2>/dev/null || true
-    source "/docker/.env.override" 2>/dev/null || true
+    source "/docker/.env.devcontainer" 2>/dev/null || true
     make_folder "$SLIDEWSL_ANGULAR_ROOT_IN_WSL"
     make_folder "$SLIDEWSL_LARAVEL_ROOT_IN_WSL"
     make_folder "$SLIDEWSL_WEB_ROOT_IN_WSL"
