@@ -30,4 +30,4 @@ FROM node_base as dev_server
 COPY scripts/run-dev-server.sh /usr/local/bin/
 COPY dev-server.conf /usr/local/etc/
 ENTRYPOINT ["/bin/bash", "-c", "fixuid prepare-node-modules.sh run-dev-server.sh \"${APPS:-err}\""]
-EXPOSE 4200-4210
+EXPOSE 4300-4310
