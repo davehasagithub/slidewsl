@@ -38,6 +38,9 @@ RUN wget -nv https://raw.githubusercontent.com/composer/getcomposer.org/c1939105
 
 COPY scripts/prepare-vendor.sh /usr/local/bin
 
+# RUN curl -sL -o /usr/local/bin/dbgpProxy https://xdebug.org/files/binaries/dbgpProxy
+# RUN chmod 755 /usr/local/bin/dbgpProxy
+
 USER php
 ENTRYPOINT ["fixuid", "prepare-vendor.sh"]
 

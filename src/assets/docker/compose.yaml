@@ -152,6 +152,8 @@ services:
       target: fpm
     networks:
       - fpm
+    environment:
+      WSL2_GATEWAY: ${WSL2_GATEWAY}
     deploy:
       replicas: 1
     #profiles:
