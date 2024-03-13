@@ -67,7 +67,7 @@ clean() {
 }
 
 run_container() {
-  run_socat
+  run_socat_docker_daemon
   docker compose up -d "$dev_container"
   docker compose exec -it "$dev_container" bash
   echo "|"
@@ -90,17 +90,17 @@ list() {
   echo
 }
 
-run_socat() {
-  if ! docker inspect -f '{{.State.Running}}' "socat" &>/dev/null; then
-    echo "Launching socat"
-    docker rm -f socat >/dev/null 2>&1 || true
-    docker run --rm -d --name socat \
-      -p 127.0.0.1:2376:4000 \
-      -v /var/run/docker.sock:/var/run/docker.sock \
-      alpine/socat \
-      tcp-listen:4000,fork,reuseaddr unix-connect:/var/run/docker.sock
-  else
-    echo "socat is already running"
+run_socat_docker_daemon() {
+  if ! docker inspect -f '{{.State.Running}}' "socat-docker-daemon" &>/dev/null; then
+    LISTEN_HOST=127.0.0.1
+    LISTEN_PORT=2376
+    SOCKET=docker.sock
+    echo "Launching socat-docker-daemon: ${LISTEN_HOST}:${LISTEN_PORT} => ${SOCKET}"
+    docker rm -f socat-docker-daemon >/dev/null 2>&1 || true
+    docker run --rm -d --name socat-docker-daemon \
+      -p "${LISTEN_HOST}":"${LISTEN_PORT}":4000 \
+      -v /var/run/docker.sock:/var/run/"${SOCKET}" \
+      alpine/socat tcp-listen:4000,fork,reuseaddr unix-connect:/var/run/"${SOCKET}"
   fi
 }
 
