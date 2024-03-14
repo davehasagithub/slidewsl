@@ -38,6 +38,7 @@ server {
       include fastcgi_params;
       fastcgi_param SCRIPT_FILENAME /laravel/public/index.php;
       fastcgi_param SCRIPT_NAME     '/api/index.php';
+      fastcgi_param SERVER_NAME     $host;
       fastcgi_pass  php-fpm:9000;
     }
 }

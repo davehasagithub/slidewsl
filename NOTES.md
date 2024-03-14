@@ -78,6 +78,8 @@ the devcontainer launcher script exports the _WSL2 gateway IP address_ to a vari
   - Requests to `/api` are routed to Laravel's `public/index.php`.
     Angular's `proxy.conf.json` for the webpack dev server
     should use target `http://nginx:8080` with `changeOrigin: false`.
+  - For debugging in IntelliJ, map the value of `SLIDEWSL_LARAVEL_ROOT_IN_WSL` to `/laravel`
+    under Settings | Languages & Frameworks | PHP | Servers.
 
 ### Miscellaneous
 
