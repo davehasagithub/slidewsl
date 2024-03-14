@@ -2,14 +2,23 @@
 
 _This page includes random notes that should one day become proper documentation._
 
-### The graphical environment:
+### TODO
+
+_In no particular order:_
+- Redis/KeyDB
+- MySQL
+- phpMyAdmin
+- SSL/nginx certs
+- Logs in a named volume
+
+### The graphical environment
   - A lightweight XFCE desktop is accessible by connecting to _localhost_ from
       a remote desktop client such as Microsoft Remote Desktop or FreeRDP. You won't
       need an X11 server (such as VcXsrv or Xming) running on the Windows host.
   - This comes with JetBrains Toolbox, plus Firefox and Chromium.
   - <img alt="screenshot" src="./slidewsl.png" width="500" height="281" />
 
-### The devcontainer:
+### The devcontainer
   - As developers, we want to keep the WSL2 distro light, while also having a
   consistent and reproducible environment for all of our tools and dependencies.
   To achieve these goals:
@@ -44,13 +53,13 @@ _This page includes random notes that should one day become proper documentation
     - Store your `sync.sh` here and let it copy itself into place.
     - Create your own `motd.extras` to append more info to the message-of-the-day.
     - Make `nginx.custom.conf` to specify a new app-to-doc-root folder mapping.
-    - Add browscap with `php.extras.ini` and copy `browscap.ini` to `php/extras`.
+    - Add browscap with `php.extras.ini` and copy `browscap.ini` to `php-fpm/extras`.
     - Write a replacement `dev-server.conf` to map apps to your `ng serve` commands.
     - Use `.env.devcontainer` to set your own web, angular, and laravel root folders.
-    - Use `.env.php` to set `APP_ENV` for laravel.
+    - Use `.env.php-fpm` to set `APP_ENV` for laravel.
     - rsync an entirely new branch of SlideWSL.
 
-### Debugging:
+### Debugging
 
   - In order to debug using IntelliJ with WSL2 and Xdebug,
 the devcontainer launcher script exports the _WSL2 gateway IP address_ to a variable.

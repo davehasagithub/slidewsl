@@ -125,7 +125,7 @@ services:
 
   php-composer:
     build:
-      context: php
+      context: php-fpm
       target: base
       additional_contexts:
         shared: _shared
@@ -135,7 +135,7 @@ services:
       - ${SLIDEWSL_LARAVEL_ROOT_IN_WSL}:/laravel
       - /etc/localtime:/etc/localtime:ro
     env_file:
-      - path: .env.php
+      - path: .env.php-fpm
         required: false
     deploy:
       replicas: 0
