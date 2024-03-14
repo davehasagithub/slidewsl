@@ -28,8 +28,13 @@ RUN pecl install redis-5.2.1 \
 	&& pecl install xdebug-3.0.4 \
 	&& docker-php-ext-enable redis xdebug
 
-COPY php.ini "$PHP_INI_DIR"
-COPY php.*.ini "$PHP_INI_DIR"
+COPY php.ini.patch /tmp/php.ini.patch
+RUN cd "$PHP_INI_DIR" \
+    && cp php.ini-development php.ini \
+    && patch -p0 </tmp/php.ini.patch \
+    && rm /tmp/php.ini.patch
+
+COPY php.extras*.ini "$PHP_INI_DIR"
 COPY extras/* "$PHP_INI_DIR/extras/"
 RUN cat $PHP_INI_DIR/php.*.ini >>$PHP_INI_DIR/php.ini || true
 
