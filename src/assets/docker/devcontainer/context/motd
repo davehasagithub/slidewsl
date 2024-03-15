@@ -1,32 +1,27 @@
 
 <WBB>|                                  |
 <WBB>|   Welcome to the devcontainer!   |
-<WBB>|    (Admin script coming soon)    |
 <WBB>|                                  |
 
 <GXX>Service management
- <WBX>nginx and php-fpm:
-  <CXX>docker compose up -d
- <WBX>angular webpack dev server:
-  <CXX>APPS="<YXX><app> ...<CXX>" docker compose up --force-recreate angular_dev_server -d
+<WBX>Launch nginx, php-fpm, and keydb:
+ <CXX>docker compose up -d
+<WBX>Launch angular webpack dev server:
+ <CXX>APPS="<YBX><app> <CLR><YXX>[<app> ...]<CXX>" docker compose up --force-recreate angular_dev_server -d
 
-<GXX>One-offs
+<GXX>One-off tasks
+ <CXX>docker compose run --build --rm angular_app_build <YBX><app> <CLR><YXX>[<base-href> [<other-args...>]]
  <CXX>docker compose run --build --rm angular_node_modules
- <CXX>docker compose run --build --rm angular_app_build <YXX><app> [<base-href> [<other-args...>]]
  <CXX>docker compose run --build --rm php-composer
 
-<GXX>Create starter projects (if starting without an existing project)
+<GXX>Create starter projects
  <CXX>docker compose run --build --rm angular_create_starter <YXX><app>
  <CXX>docker compose run --build --rm laravel_create_starter
 
-<GXX>Tail the logs: <CXX>docker compose logs nginx php-fpm angular_dev_server -f
-<GXX>Interactive Terminal: <CXX>docker compose exec -it -u root <YXX><service><CXX> bash
-
-Problems? You can always exit back to WSL and run <CXX>dcl reset<CLR>. Or:
-<GXX>docker compose down --rmi all nginx php-fpm angular_dev_server; \
-<GXX>docker compose up -d; \
-<GXX>APPS="<YXX>...<GXX>" docker compose up --force-recreate angular_dev_server -d; \
-<GXX>docker compose logs nginx php-fpm angular_dev_server -f
-
-<WBX>Use <RBX>dchelp<WBX> to redisplay this info.
+<GXX>Tail the logs: <CXX>docker compose logs -f
+<GXX>Interactive terminal in container: <CXX>docker compose exec -it -u root <YXX><service><CXX> bash
+<GXX>Install inside container: <CXX>apt update; apt install -y iputils-ping telnet vim less
+<GXX>Mini reset: <CXX>docker compose down --rmi all --remove-orphans
+<GXX>Full reset: <CXX>exit<CLR> <WXX>back to WSL, then <CXX>dcl reset
+<GXX>Redisplay this: <RBX>dchelp
 

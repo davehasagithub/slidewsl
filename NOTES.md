@@ -5,7 +5,6 @@ _This page includes random notes that should one day become proper documentation
 ### TODO
 
 _In no particular order:_
-- Redis/KeyDB
 - MySQL
 - phpMyAdmin
 - SSL/nginx certs
@@ -36,7 +35,7 @@ _In no particular order:_
       relays into the privileged socket.
     - Local customizations can be achieved through an optional script that
       runs when initializing the devcontainer.
-  - The devcontainer includes containers for nginx, Angular, and PHP.
+  - The devcontainer includes containers for nginx, Angular, PHP, and KeyDB.
   You can perform one-off yarn and composer installs and ng builds.
  
 ### Customizations
@@ -138,6 +137,8 @@ using commands like:
 
 ### Walkthrough
 
+_Note: This is often outdated, but it's still representative._
+
 - This is a basic walkthrough:
   - Install SlideWSL
   - If you have an existing project, clone it to `~/src`. In this example,
@@ -147,7 +148,7 @@ using commands like:
     - Create Angular and Laravel starter apps
     - Run an Angular ng build
     - Launch the webpack dev server
-    - Launch nginx and PHP-FPM (in this case, already up from previous step)
+    - Launch nginx, PHP-FPM, and KeyDB (in this case, already up from previous step)
     - Tail the logs
   - If you're playing along, here's a block you can copy/paste in the devcontainer:
       ```
@@ -156,7 +157,7 @@ using commands like:
       docker compose run --build --rm angular_app_build example; \
       APPS="example" docker compose up --force-recreate angular_dev_server -d; \
       docker compose up -d; \
-      docker compose logs nginx php-fpm angular_dev_server -f
+      docker compose logs -f
       ```
   - Update the Windows `hosts` file:
     ```text

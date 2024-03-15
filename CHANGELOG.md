@@ -2,6 +2,10 @@ Many of the items below are expanded on in [NOTES](./NOTES.md).
 
 ---
 
+**03/14/2024**
+
+- Add keydb cluster
+
 **03/10/2024**
 
 - Add nginx and php-fpm containers
