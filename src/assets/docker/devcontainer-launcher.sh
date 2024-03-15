@@ -24,24 +24,25 @@ main() {
 }
 
 usage() {
-  echo "|"
-  echo "| Usage:"
-  echo "| ${ALIAS_USED:-$0} [status|reset [cache]|list [stats]|clean|help]"
-  # echo "|"
-  # echo "| (If found, /docker/sync.sh will run first.)"
-  echo "|"
-  echo "| When no argument is provided:"
-  echo "|   -Run or reattach to the $dev_container"
-  echo "|"
-  echo "| Optional arguments:"
-  echo "|   status: Report if the $dev_container is running"
-  echo "|   reset [cache]: Purge all containers, images, and (optional) build cache"
-  echo "|   list [stats]: List all containers, images, and (optional) stats"
-  echo "|   clean: Stop and remove the $dev_container container and image"
-  echo "|   help: Show this usage info"
-  echo "|"
-  echo "| Aliases: dcl = dc-launcher = /docker/devcontainer-launcher.sh"
-  echo "|"
+  cat <<EOF | sed "s/^    //"  | daveml.sh -p "| "
+
+    <BBX>Usage:
+      <GBX>${ALIAS_USED:-$0} <CLR><GXX>[status|reset [cache]|list [stats]|clean|help]
+
+    <BBX>When no argument is provided:
+      Run or reattach to the $dev_container
+
+    <BBX>Optional arguments:
+      <GXX>status<CLR>        : Report if the $dev_container is running
+      <GXX>reset [cache]<CLR> : Purge all containers, images, and (optional) build cache
+      <GXX>list [stats]<CLR>  : List all containers, images, and (optional) stats
+      <GXX>clean<CLR>         : Stop and remove the $dev_container container and image
+      <GXX>help<CLR>          : Show this usage info
+
+    <YBX>Aliases: <RXX>dcl<YBX> = <RXX>dc-launcher<YBX> = <RXX>/docker/devcontainer-launcher.sh
+
+EOF
+
   return 1
 }
 
