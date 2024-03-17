@@ -1,0 +1,12 @@
+[mysqld]
+character-set-server = utf8mb4
+lower_case_table_names = 1
+default_storage_engine = innodb
+default_tmp_storage_engine = innodb
+internal_tmp_disk_storage_engine = innodb
+pid-file = /tmp/mysqld.pid
+explicit_defaults_for_timestamp = 1
+log_timestamps = SYSTEM
+
+[mysql]
+default-character-set=utf8mb4

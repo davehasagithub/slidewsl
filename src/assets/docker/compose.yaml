@@ -3,6 +3,7 @@ name: slidewsl
 networks:
   fpm:
   keydb:
+  mysql:
 
 volumes:
   keydb:
@@ -157,12 +158,14 @@ services:
     networks:
       - fpm
       - keydb
+      - mysql
     environment:
       WSL2_GATEWAY: ${WSL2_GATEWAY}
     deploy:
       replicas: 1
     depends_on:
       - keydb-node1
+      - mysql
 
   # --------------------------------------------------------------------------------
   # --------------------------------------------------------------------------------
@@ -201,5 +204,48 @@ services:
       service: keydb-node1
     volumes:
       - ./keydb/keydb-node3:/etc/keydb
+
+  # --------------------------------------------------------------------------------
+  # --------------------------------------------------------------------------------
+  # --------------------------------------------------------------------------------
+
+  mysql:
+    container_name: mysql
+    build:
+      context: mysql
+      additional_contexts:
+        shared: _shared
+    user: "${WSL_UID}:${WSL_GID}"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    networks:
+      - mysql
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./mysql/conf/docker.cnf:/etc/my.cnf
+      - ${SLIDEWSL_DB_ROOT_IN_WSL}:/var/lib/mysql
+    env_file:
+      - path: .env.mysql
+        required: false
+
+  phpmyadmin:
+    container_name: phpmyadmin
+    build:
+      context: phpmyadmin
+      additional_contexts:
+        shared: _shared
+    user: "${WSL_UID}:${WSL_GID}"
+    environment:
+      - PMA_HOST=mysql
+    networks:
+      - mysql
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./phpmyadmin/conf.d:/etc/phpmyadmin/conf.d
+    ports:
+      - 0.0.0.0:8080:80
+    env_file:
+      - path: .env.phpmyadmin
+        required: false
 
   # --------------------------------------------------------------------------------

@@ -1,0 +1,3 @@
+<?php
+
+$cfg['TempDir'] = '/tmp';
