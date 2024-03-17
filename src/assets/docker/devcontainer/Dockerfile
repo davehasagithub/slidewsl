@@ -29,7 +29,7 @@ RUN useradd ${USER} --create-home \
     && echo 'cd ~'>>${HOME1}/.bashrc \
     && mkdir -p ${HOME1}/.docker \
     && mv /tmp/docker-config.json ${HOME1}/.docker/config.json \
-    && chown -R ${USER}.${USER} ${HOME1}/.docker
+    && chown -R ${USER}:${USER} ${HOME1}/.docker
 
 RUN add-fixuid.sh ${USER} ${USER}
 RUN add-daveml.sh
