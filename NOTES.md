@@ -1,54 +1,34 @@
 # Notes
 
-_This page includes random notes that should one day become proper documentation._
-
-### TODO
-
-_In no particular order:_
-- MySQL
-- phpMyAdmin
-- SSL/nginx certs
-- Logs in a named volume
+_This page includes random notes that could one day become proper documentation._
 
 ### The graphical environment
   - A lightweight XFCE desktop is accessible by connecting to _localhost_ from
       a remote desktop client such as Microsoft Remote Desktop or FreeRDP. You won't
       need an X11 server (such as VcXsrv or Xming) running on the Windows host.
   - This comes with JetBrains Toolbox, plus Firefox and Chromium.
-  - <img alt="screenshot" src="./slidewsl.png" width="500" height="281" />
+  - <img alt="screenshot" src="./slidewsl.png" width="500" />
 
 ### The devcontainer
-  - As developers, we want to keep the WSL2 distro light, while also having a
-  consistent and reproducible environment for all of our tools and dependencies.
-  To achieve these goals:
-
-    - SlideWSL installs Docker on the WSL2 host, along with
-      Docker configuration files, container contexts,
-      a convenient admin script, and, of course, Git.
-    - We use Compose to launch the devcontainer (and others).
-    - The service entry for the devcontainer in
-      the Compose YAML grants it read-only access to the
-      Docker assets through a bind mount allowing it to
-      build and orchestrate all other containers.
-    - The devcontainer communicates with the Docker daemon running
-      in the WSL2 distro through a port managed by _socat_ that
-      relays into the privileged socket.
-    - Local customizations can be achieved through an optional script that
-      runs when initializing the devcontainer.
-  - The devcontainer includes containers for nginx, Angular, PHP, and KeyDB.
-  You can perform one-off yarn and composer installs and ng builds.
+  - SlideWSL installs Docker on the WSL2 host, along with configuration files,
+    container contexts, a convenient admin script, and Git.
+  - Compose is used to launch containers.
+  - A bind mount defined in the YAML grants the devcontainer read-only access to the
+    Docker assets allowing it to build and orchestrate all other containers.
+  - The devcontainer communicates with the Docker daemon running in the WSL2 distro
+    through a port managed by _socat_ that relays into the privileged Docker socket.
+  - <img alt="screenshot" src="./dchelp.png" width="500" />
  
 ### Customizations
-
   - When building or reattaching to the devcontainer, you might want to
-  do prep work or customizations, such as adding or updating file assets, or doing conversions
-  such as by running dos2unix:
+  do prep work--adding or updating assets, running dos2unix, etc.
     - If a script called `sync.sh` exists, it will run before launching the devcontainer.
-    - If this results in changes to the timestamps of the launcher or sync scripts, the launcher restarts.
+    - If this results in changes to the timestamps of the devcontainer launcher or sync scripts,
+      the launcher restarts.
   - Your sync script can be used during a fresh installation by using
     an argument to getslidewsl.bat, such as:
     `getslidewsl myusr mypswd ..\local\sync.sh`
-  - Place customizations in the SlideWSL `local` folder (this is in .gitignore). For example:
+  - Place customizations in your own `local` folder. For example:
     - Store your `sync.sh` here and let it copy itself into place.
     - Create your own `motd.extras` to append more info to the message-of-the-day.
     - Make `nginx.custom.conf` to specify a new app-to-doc-root folder mapping.
@@ -56,7 +36,7 @@ _In no particular order:_
     - Write a replacement `dev-server.conf` to map apps to your `ng serve` commands.
     - Use `.env.devcontainer` to set your own web, angular, and laravel root folders.
     - Use `.env.php-fpm` to set `APP_ENV` for laravel.
-    - rsync an entirely new branch of SlideWSL.
+    - Use `.env.phpmyadmin` to define `PMA_USER` and `PMA_PASSWORD`.
 
 ### Debugging
 
@@ -141,7 +121,9 @@ _Note: This is often outdated, but it's still representative._
 
 - This is a basic walkthrough:
   - Install SlideWSL
-  - If you have an existing project, clone it to `~/src`. In this example,
+  - If you have an existing project, clone it to `~/src`
+    and clone your mysql database to `~/db`.
+    In this example,
     we will skip this step and create a starter app instead.
   - Launch the devcontainer
   - Bring up our environment
@@ -150,7 +132,7 @@ _Note: This is often outdated, but it's still representative._
     - Launch the webpack dev server
     - Launch nginx, PHP-FPM, and KeyDB (in this case, already up from previous step)
     - Tail the logs
-  - If you're playing along, here's a block you can copy/paste in the devcontainer:
+  - Here's a block you can copy/paste in the devcontainer:
       ```
       docker compose run --build --rm angular_create_starter example; \
       docker compose run --build --rm laravel_create_starter; \
@@ -166,6 +148,7 @@ _Note: This is often outdated, but it's still representative._
   - Visit the example site:
     - Served from nginx: http://local.example.com
     - Served from webpack dev server: http://local.example.com:4201
+    - Then try phpmyadmin (root/root): http://localhost:8080/
   - Run `dcl list` to show images and containers.
 
 ---

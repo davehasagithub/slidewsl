@@ -2,21 +2,19 @@
 
 The `S`imple `L`inux `I`nterface for `DE`veloping on `WSL` (Slide Whistle!)
 
-With SlideWSL, you can quickly create a custom Linux development environment
-on Windows using just a **single DOS batch file** that runs from CMD with
+SlideWSL is a tool to easily create a custom Linux development environment
+on Windows using just a **single DOS batch file**. It runs from CMD with
 no user interaction [^1].
 
-[^1]: Except a Y/N confirmation if an existing distro will be overwritten,
-or if the WSL update triggers UAC.
+[^1]: Except a confirmation to overwrite an existing distro, or a Windows UAC popup for a WSL update.
 
-The built-in development environment is an opinionated set of containers for
-Angular, Laravel, and nginx. While it does allow for some customization, it
-could also serve as a foundation for creating something tailored to your needs.
+Simple shell scripts and various assets are encoded into base64 chunks that
+become a series of variables in the lone batch file. These can then be decoded
+to reconstitute everything needed to provision the WSL2 distro.
 
-- Uses Oracle Linux 8.
-- Companion assets embedded into a lone .bat file.
-- Includes an optional graphical environment.
-- Incorporates a Docker _devcontainer_.
+The particular dev environment included here is an opinionated set of Docker
+containers for nginx, Angular, PHP/Laravel, KeyDB, MySQL, and phpMyAdmin.
+However, a similar approach could be reapplied for other tech stacks.
 
 See [NOTES](./NOTES.md) for details,
 and [CHANGELOG](./CHANGELOG.md) for background.

@@ -2,6 +2,10 @@ Many of the items below are expanded on in [NOTES](./NOTES.md).
 
 ---
 
+**03/16/2024**
+
+- Add mysql and phpmyadmin
+
 **03/14/2024**
 
 - Add keydb cluster
