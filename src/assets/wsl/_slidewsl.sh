@@ -138,7 +138,11 @@ set_up_user() {
       && chmod +x Desktop/jbtoolbox.desktop
   "
 
-  rsync -av "$assetFolder/../docker/" /docker
+  mkdir -p /docker
+  chown "$username":"$(id -gn "$username")" /docker
+  sudo -u "$username" -i sh -c "
+    rsync -av $assetFolder/../docker/ /docker
+  "
 }
 
 # -----------------------------------
