@@ -6,7 +6,7 @@ RUN useradd php --create-home
 COPY --from=shared add-fixuid.sh /usr/local/bin
 RUN add-fixuid.sh php php
 
-RUN --mount=type=cache,target=/var/cache/apt \
+RUN --mount=type=cache,sharing=locked,target=/var/cache/apt \
     apt-get update \
     && apt-get install -y \
       libjpeg62-turbo-dev \
