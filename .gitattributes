@@ -1,0 +1,6 @@
+* text=auto eol=lf
+
+.env.* text
+*.conf text
+*.ini text
+*.extras text
