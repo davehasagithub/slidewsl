@@ -34,7 +34,7 @@ usage() {
 
     <BBX>Optional arguments:
       <GXX>status<CLR>        : Report if the $dev_container is running
-      <GXX>reset [cache]<CLR> : Purge all containers, images, and (optional) build cache
+      <GXX>reset [cache]<CLR> : Purge containers, images, volumes, networks, and (optional) build cache
       <GXX>list [stats]<CLR>  : List all containers, images, and (optional) stats
       <GXX>clean<CLR>         : Stop and remove the $dev_container container and image
       <GXX>help<CLR>          : Show this usage info
@@ -57,6 +57,9 @@ reset() {
   fi
   docker container prune -f || true
   docker image prune -af || true
+  docker volume prune -af || true
+  docker network prune -f || true
+  # docker system prune --all || true
   echo "done"
 }
 
@@ -83,6 +86,12 @@ list() {
   docker image ls -a
   echo -e "\n${HIGHLIGHT} containers ${NC}"
   docker container ls -a
+  echo -e "\n${HIGHLIGHT} networks ${NC}"
+  docker network ls
+  echo -e "\n${HIGHLIGHT} volumes ${NC}"
+  docker volume ls
+  echo -e "\n${HIGHLIGHT} resources ${NC}"
+  docker system df
   if [[ "$1" == "stats" ]]; then
     echo -e "\n${HIGHLIGHT} stats ${NC}"
     echo -en "wait\r"
@@ -149,6 +158,7 @@ ensure_folders_exist() {
     make_folder "$SLIDEWSL_ANGULAR_ROOT_IN_WSL"
     make_folder "$SLIDEWSL_LARAVEL_ROOT_IN_WSL"
     make_folder "$SLIDEWSL_WEB_ROOT_IN_WSL"
+    make_folder "$SLIDEWSL_DB_ROOT_IN_WSL"
   )
   subshell_exit_code=$?
   if [ "$subshell_exit_code" -ne 0 ]; then
