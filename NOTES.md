@@ -146,9 +146,10 @@ _Note: This is often outdated, but it's still representative._
     127.0.0.1 local.example.com
     ```
   - Visit the example site:
-    - Served from nginx: http://local.example.com
+    - Served from nginx: https://local.example.com 
+      - This uses a self-signed cert, so you will get a warning.
     - Served from webpack dev server: http://local.example.com:4201
-    - Then try phpmyadmin (root/root): http://localhost:8080/
+    - phpMyAdmin (user/pass: root/root): http://localhost:8080/
   - Run `dcl list` to show images and containers.
 
 ---
