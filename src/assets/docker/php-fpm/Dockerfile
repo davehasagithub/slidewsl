@@ -39,7 +39,9 @@ COPY extras/* "$PHP_INI_DIR/extras/"
 RUN cat $PHP_INI_DIR/php.*.ini >>$PHP_INI_DIR/php.ini || true
 
 RUN wget -nv https://raw.githubusercontent.com/composer/getcomposer.org/c19391050a3d81f65e61049ebc30dbd4f5a99603/web/installer -O /tmp/composer_2.1.6.phar \
-    && cat /tmp/composer_2.1.6.phar | php -- --version="2.1.6" --install-dir="/usr/local/bin" --filename="composer"
+    && cat /tmp/composer_2.1.6.phar | php -- --version="2.1.6" --install-dir="/usr/local/bin" --filename="composer" \
+    && mkdir -p /tools \
+    && composer require --working-dir=/tools friendsofphp/php-cs-fixer:3.1.0 phpstan/phpstan:0.12.96 vimeo/psalm:4.9.3 --no-interaction
 
 COPY scripts/prepare-vendor.sh /usr/local/bin
 
