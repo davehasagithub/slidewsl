@@ -2,6 +2,10 @@ Many of the items below are expanded on in [NOTES](./NOTES.md).
 
 ---
 
+**03/18/2024**
+
+- SSL: Add self-signed cert to nginx
+
 **03/16/2024**
 
 - Add mysql and phpmyadmin
