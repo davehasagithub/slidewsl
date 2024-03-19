@@ -17,12 +17,15 @@ map $host $dist_root {
 include /etc/nginx/nginx.*.conf;
 
 server {
-    listen       8080;
+    listen       4430 ssl;
     server_name  localhost;
 
     root $dist_root;
 
     add_header X-Dist-Root $dist_root always;
+
+    ssl_certificate     /etc/nginx/certs/cert.crt;
+    ssl_certificate_key /etc/nginx/certs/cert.key;
 
     location / {
       index index.html;

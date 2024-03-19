@@ -16,6 +16,11 @@ RUN rm /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY nginx.*.conf /etc/nginx/
 
+RUN mkdir -p /etc/nginx/certs \
+    && openssl genrsa -out /etc/nginx/certs/cert.key 2048 \
+    && openssl req -new -key /etc/nginx/certs/cert.key -x509 -days 3650 -out /etc/nginx/certs/cert.crt -nodes -subj "/C=XX" \
+    && chown -R nginx:nginx /etc/nginx/certs
+
 ENTRYPOINT ["fixuid", "/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
 
