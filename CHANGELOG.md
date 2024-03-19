@@ -5,6 +5,7 @@ Many of the items below are expanded on in [NOTES](./NOTES.md).
 **03/18/2024**
 
 - SSL: Add self-signed cert to nginx
+- Add php-cs-fixer, phpstan, psalm
 
 **03/16/2024**
 
