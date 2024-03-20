@@ -38,7 +38,16 @@ _This page includes random notes that could one day become proper documentation.
     - Use `.env.php-fpm` to set `APP_ENV` for laravel.
     - Use `.env.phpmyadmin` to define `PMA_USER` and `PMA_PASSWORD`.
 
-### Debugging
+### IntelliJ
+
+#### PHP
+
+  - Use the PHP Docker plugin in IntelliJ to work remotely with the PHP CLI from the
+  _slidewsl-php-fpm_ Docker container.
+  - Enable PHP CS Fixer using the same container
+  and the path: `/tools/vendor/friendsofphp/php-cs-fixer/php-cs-fixer`
+
+#### Debugging
 
   - In order to debug using IntelliJ with WSL2 and Xdebug,
 the devcontainer launcher script exports the _WSL2 gateway IP address_ to a variable.
