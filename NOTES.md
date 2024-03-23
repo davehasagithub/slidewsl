@@ -19,7 +19,7 @@ _This page includes random notes that could one day become proper documentation.
  
 ### Customizations
 
-  During installation, the Docker assets found in `src/docker` will be copied to `/docker`
+  During installation, the Docker assets found in `src/assets/docker` will be copied to `/docker`
     in the root of the WSL2 distro (or, more specifically, they are expanded from the
     encoded chunks in `getslidewsl.bat`).
   
