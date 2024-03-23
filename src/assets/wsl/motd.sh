@@ -1,1 +1,1 @@
-/usr/local/bin/daveml.sh /etc/motd
+/docker/dev-admin.sh help

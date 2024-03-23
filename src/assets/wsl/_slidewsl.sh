@@ -27,6 +27,9 @@ init() {
     exit 1
   fi
 
+  # echo 'hosts: files dns' > /etc/nsswitch.conf
+  # ulimit -n 1024
+
   export username="$1"
   assetFolder="$(pwd)"
   export assetFolder
@@ -112,8 +115,6 @@ set_up_env() {
 
   curl -sL -o /usr/local/bin/daveml.sh https://raw.githubusercontent.com/davehasagithub/daveml/main/daveml.sh
   chmod 755 /usr/local/bin/daveml.sh
-
-  cp "$assetFolder/motd" /etc
 }
 
 set_up_skel() {

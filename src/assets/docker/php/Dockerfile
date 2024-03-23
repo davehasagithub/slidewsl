@@ -28,35 +28,19 @@ RUN pecl install redis-5.2.1 \
 	&& pecl install xdebug-3.0.4 \
 	&& docker-php-ext-enable redis xdebug
 
-COPY php.ini.patch /tmp/php.ini.patch
-RUN cd "$PHP_INI_DIR" \
-    && cp php.ini-development php.ini \
-    && patch -p0 </tmp/php.ini.patch \
-    && rm /tmp/php.ini.patch
-
-COPY php.extras*.ini "$PHP_INI_DIR"
-COPY extras/* "$PHP_INI_DIR/extras/"
-RUN cat $PHP_INI_DIR/php.*.ini >>$PHP_INI_DIR/php.ini || true
+RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
 RUN wget -nv https://raw.githubusercontent.com/composer/getcomposer.org/c19391050a3d81f65e61049ebc30dbd4f5a99603/web/installer -O /tmp/composer_2.1.6.phar \
     && cat /tmp/composer_2.1.6.phar | php -- --version="2.1.6" --install-dir="/usr/local/bin" --filename="composer" \
     && mkdir -p /tools \
     && composer require --working-dir=/tools friendsofphp/php-cs-fixer:3.1.0 phpstan/phpstan:0.12.96 vimeo/psalm:4.9.3 --no-interaction
 
-COPY scripts/prepare-vendor.sh /usr/local/bin
-
-# RUN curl -sL -o /usr/local/bin/dbgpProxy https://xdebug.org/files/binaries/dbgpProxy
-# RUN chmod 755 /usr/local/bin/dbgpProxy
+ENV PATH="$PATH:/usr/local/bin/php-scripts/"
 
 USER php
-ENTRYPOINT ["fixuid", "prepare-vendor.sh"]
+ENTRYPOINT ["fixuid", "entrypoint.sh"]
 
-FROM base as starter
-
-COPY scripts/create-starter-app.sh /usr/local/bin
-ENTRYPOINT ["fixuid", "create-starter-app.sh"]
-
-FROM base as fpm
+FROM base as php-fpm
 
 ENTRYPOINT ["fixuid", "prepare-vendor.sh", "docker-php-entrypoint"]
 CMD ["php-fpm"]

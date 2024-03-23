@@ -1,11 +1,7 @@
-dcl() { (
-  export ALIAS_USED=dcl
-  /docker/devcontainer-launcher.sh "$@"
+dev() { (
+  export ALIAS_USED=dev
+  /docker/dev-admin.sh "$@"
 ); }
 
-dc-launcher() { (
-  export ALIAS_USED=dc-launcher
-  /docker/devcontainer-launcher.sh "$@"
-); }
-
+alias devhelp=". /etc/profile.d/motd.sh"
 alias daveml="/usr/local/bin/daveml.sh"

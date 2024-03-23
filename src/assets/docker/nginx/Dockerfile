@@ -14,7 +14,6 @@ USER root
 
 RUN rm /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY nginx.*.conf /etc/nginx/
 
 RUN mkdir -p /etc/nginx/certs \
     && openssl genrsa -out /etc/nginx/certs/cert.key 2048 \

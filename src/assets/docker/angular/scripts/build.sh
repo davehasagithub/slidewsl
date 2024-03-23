@@ -3,6 +3,8 @@
 if [[ "$#" == 0 ]]; then
   echo "usage: $0 <app> [<base-href> [<other-build-args>]]"
 else
+  cd "/angular" || { echo unable to use angular folder; exit 1; }
+
   app="$1"
   base_href="${2:-/}"
   other_build_args=
