@@ -1,5 +1,5 @@
 export DOCKER_BUILDKIT=1
-export COMPOSE_FILE="/docker/compose.yaml"
+export COMPOSE_FILE="$HOME/slidewsl/compose.yaml"
 
 WSL_UID=$(id -u)
 WSL_GID=$(id -g)

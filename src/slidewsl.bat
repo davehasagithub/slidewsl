@@ -114,7 +114,7 @@ if not exist "%tempProvisionPath%/wsl/%tempProvisionScript%" (
 
 if not "%syncPath%" == "" (
   echo adding %syncPath%
-  copy "%syncPath%" "%tempProvisionPath%/docker/sync.sh"
+  copy "%syncPath%" "%tempProvisionPath%/slidewsl/sync.sh"
 )
 
 echo provisioning

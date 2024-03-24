@@ -24,7 +24,7 @@ usage() {
 
     <WBB>   Welcome to the SlideWSL development environment!   <CLR>
 
-    <GXX>Redisplay this info  <KXW> dev <CLR> (or /docker/dev-admin.sh)
+    <GXX>Redisplay this info  <KXW> dev <CLR> (or ~/slidewsl/dev-admin.sh)
 
     <GBX>Launch environment   <CLR><CXX>docker compose up -d
     <GBX>Webpack dev server   <CLR><CXX>APPS="<YBX><app> <CLR><YXX>[...]<CXX>" docker compose up --force-recreate angular_dev_server -d
@@ -90,7 +90,7 @@ list() {
 }
 
 sync() {
-  script="/docker/sync.sh"
+  script="$HOME/slidewsl/sync.sh"
   if [ -f "$script" ]; then
     echo "Running sync.sh"
     initial_timestamp=$(stat -c %Y "$script")

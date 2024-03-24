@@ -89,7 +89,7 @@ services:
       - default
       - php-fpm
     volumes:
-      - /docker/nginx/templates:/etc/nginx/templates:ro
+      - ./nginx/templates:/etc/nginx/templates:ro
       - ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}:/angular
       - ${SLIDEWSL_LARAVEL_ROOT_IN_WSL}:/laravel
       - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/webroot

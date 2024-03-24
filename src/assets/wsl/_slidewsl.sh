@@ -136,13 +136,10 @@ set_up_user() {
   sudo -u "$username" -i sh -c "
     mkdir -p Desktop \
       && cp $assetFolder/jbtoolbox.desktop Desktop \
-      && chmod +x Desktop/jbtoolbox.desktop
-  "
+      && chmod +x Desktop/jbtoolbox.desktop;
 
-  mkdir -p /docker
-  chown "$username":"$(id -gn "$username")" /docker
-  sudo -u "$username" -i sh -c "
-    rsync -av $assetFolder/../docker/ /docker
+    mkdir -p slidewsl \
+      && rsync -av $assetFolder/../slidewsl/ slidewsl
   "
 }
 

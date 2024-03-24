@@ -19,24 +19,24 @@ _This page includes random notes that could one day become proper documentation.
  
 ### Customizations
 
-  During installation, the Docker assets found in `src/assets/docker` will be copied to `/docker`
+  During installation, the Docker assets found in `src/assets/slidewsl` will be copied to `~/slidewsl`
     in the root of the WSL2 distro (or, more specifically, they are expanded from the
     encoded chunks in `getslidewsl.bat`).
   
   If you're interested in making customizations, one approach is to clone this repo to your
     Windows host (i.e., outside of the WSL2 distro).
-  - Run `dev sync` in WSL2, and, if found, it will run `/docker/sync.sh`.
+  - Run `dev sync` in WSL2, and, if found, it will run `~/slidewsl/sync.sh`.
     - During a fresh install of SlideWSL, pass the location of your script:
       `getslidewsl myusr mypswd ..\local\sync.sh`
-    - To begin using after installation, copy your script from, for example, `/mnt/c/path/repo/local`, to `/docker`.
-  - Place `sync.sh` in your repo's `local` folder. When `dev sync` runs, it copies `/docker/sync.sh` to `/tmp`
-    for execution. On return, if the timestamp of `/docker/sync.sh` changed, it runs again.
+    - To begin using after installation, copy your script from, for example, `/mnt/c/path/repo/local/sync.sh`, to `~/slidewsl/sync.sh`.
+  - Place `sync.sh` in your repo's `local` folder. When `dev sync` runs, it copies `~/slidewsl/sync.sh` to `/tmp`
+    for execution. On return, if the timestamp of `~/slidewsl/sync.sh` changed, it runs again.
   - Example things to do in `sync.sh`:
-    - `rsync` your `/src/assets/docker/` folder to `/docker` (with `--delete`).
+    - `rsync` your `src/assets/slidewsl` folder to `~/slidewsl` (with `--delete`).
     - Use `docker-custom.env` to override `docker-base.env` with your own _web_, _angular_, _laravel_, and _db_ root folders.
     - Use `docker-php.env` to set `APP_ENV` for your laravel app.
     - Write a replacement `dev-server.conf` to map apps to your `ng serve` commands.
-    - Add support for browscap by copying an _.ini_ file to `/docker/php/conf`.
+    - Add support for browscap by copying an _.ini_ file to `~/slidewsl/php/conf`.
     - Use `docker-phpmyadmin.env` to define `PMA_USER` and `PMA_PASSWORD`.
     - Run `dos2unix` if necessary.
 
@@ -190,27 +190,7 @@ C:\SlideWSL>wsl
 |
 | Welcome to the SlideWSL development environment!
 |
-| Redisplay this info   dev  (or /docker/dev-admin.sh)
-|
-| Launch environment   docker compose up -d
-| Webpack dev server   APPS="<app> [...]" docker compose up --force-recreate angular_dev_server -d
-| Tail the logs        docker compose logs -f
-| Build an angular app docker compose run --rm angular build <app> [<base-href> [<other-args...>]]
-|
-| See what's running   docker compose ps
-| Stop environment     docker compose down
-| Update node_modules  docker compose run --rm angular node_modules
-| Update composer      docker compose run --rm php composer
-| Interactive terminal docker compose exec -it -u root <service> bash
-| Tail laravel log     docker compose exec php-fpm tail -f /laravel/storage/logs/laravel_line-202x-xx-xx.log
-| Install in container apt update; apt install -y iputils-ping telnet vim less
-| Make angular starter docker compose run --rm angular starter <app>
-| Make laravel starter docker compose run --rm php starter
-| Check keydb cluster  docker compose exec -it keydb-node1 keydb-cli cluster info
-| Rebuild services     docker compose down --rmi all --remove-orphans -v && docker compose build --no-cache
-| Run sync.sh script   /docker/dev-admin.sh sync
-| See Docker resources /docker/dev-admin.sh list [stats]
-| Reset                /docker/dev-admin.sh reset [cache]
+| <snip>
 |
 
 
