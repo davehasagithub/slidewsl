@@ -1,18 +1,179 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Notes](#notes)
+    - [Basic walkthrough](#basic-walkthrough)
+    - [Development environment](#development-environment)
+    - [Graphical interface](#graphical-interface)
+    - [Customizations](#customizations)
+    - [Virtual disk image](#virtual-disk-image)
+    - [IntelliJ](#intellij)
+      - [PHP](#php)
+      - [Debugging](#debugging)
+    - [Laravel](#laravel)
+    - [Miscellaneous](#miscellaneous)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
+<!-- doctoc NOTES.md --github -->
+
 # Notes
+
+
+### Basic walkthrough
+
+- Steps:
+    - Install SlideWSL
+    - Create a starter app
+    - Launch nginx, PHP-FPM/Laravel, KeyDB, MySQL, and phpMyAdmin
+    - Launch the webpack dev server
+    - Tail the logs
+- Here's a block you can copy/paste:
+  ```bash
+  docker compose run --rm angular starter example \
+    && docker compose run --rm php starter \
+    && docker compose up -d \
+    && APPS="example" docker compose up --force-recreate angular_dev_server -d \
+    && docker compose logs -f
+  ```
+  But, if you already have a project in place, you'd skip the _starter_ steps and add a _build_ step like this:
+  ```bash
+  docker compose up -d \
+    && docker compose run --rm angular build my-project \
+    && APPS="my-project" docker compose up --force-recreate angular_dev_server -d \
+    && docker compose logs -f
+  ```
+- Update the Windows `hosts` file:
+  ```text
+  127.0.0.1 local.example.com
+  ```
+- Visit the example site:
+    - nginx: https://local.example.com (bypass self-signed cert warning)
+    - webpack dev server: http://local.example.com:4201
+    - phpMyAdmin (user/pass: root/root): http://localhost:8080/
+
+---
+
+```text
+C:\SlideWSL>getslidewsl dave mypassword
+user: dave
+OracleLinux_8_7 already exists. do you wish to delete it?
+Enter Y or N: [Y,N]?Y
+
+<snip>
+
+----------------------------------------------------------
+
+ Done!
+
+ Start: 06:50:47.96
+ End  : 06:54:08.07
+
+ Now run  Windows Remote Desktop  (mstsc.exe)
+ Use the computer location: localhost:3390
+ Username: dave (and the password you provided)
+
+ Or, for a terminal: wsl or oraclelinux87
+ Or, for ssh: ssh dave@localhost -p 2223
+
+----------------------------------------------------------
+
+
+C:\SlideWSL>wsl
+|
+| Welcome to the SlideWSL development environment!
+|
+| <snip>
+|
+
+
+[dave@wsl ~]$ docker compose run --rm angular starter example
+generating application: example
+yarn run v1.22.19
+Packages installed successfully.
+building with: ng build example --base-href=/
+Initial Chunk Files           | Names         |  Raw Size | Estimated Transfer Size
+main.6024eba3a956365b.js      | main          | 173.64 kB |                46.40 kB
+polyfills.9acd7e87ef537323.js | polyfills     |  33.08 kB |                10.64 kB
+runtime.92c8b83a3d996273.js   | runtime       | 892 bytes |               506 bytes
+styles.ef46db3751d8e999.css   | styles        |   0 bytes |                       -
+                              | Initial Total | 207.59 kB |                57.53 kB
+
+
+[dave@wsl ~]$ docker compose run --rm php starter
+Created project in /laravel/.
+Updating dependencies
+Publishing complete.
+
+
+[dave@wsl ~]$ docker compose up -d
+✔ Container keydb-node3       Started
+✔ Container keydb-node2       Started
+✔ Container slidewsl-init0-1  Exited
+✔ Container keydb-node1       Started
+✔ Container slidewsl-init-1   Started
+✔ Container mysql             Started
+✔ Container phpmyadmin        Started
+✔ Container php-fpm           Started
+✔ Container nginx             Started
+
+
+[dave@wsl ~]$ APPS="example" docker compose up --force-recreate angular_dev_server -d
+✔ Container angular_dev_server Started
+
+
+[dave@wsl ~]$ docker compose logs -f
+<snip>
+^C canceled
+
+[dave@wsl ~]$
+```
+
 
 ### Development environment
 
 <img alt="screenshot" src="./devhelp.png" width="500" />
+
+Type `dev` (an alias for `~/slidewsl/dev-admin.sh`) to see a list of commands.
+More commands might be added later to simplify administration (such as `dev list`).
 
 
 ### Graphical interface
 
 <img alt="screenshot" src="./slidewsl.png" width="500" />
 
-  A lightweight XFCE desktop is accessible by connecting to _localhost_ from
-    a remote desktop client such as Microsoft Remote Desktop or FreeRDP. You won't
-    need an X11 server (such as VcXsrv or Xming) running on the Windows host.
-  This comes with JetBrains Toolbox, plus Firefox and Chromium.
+A lightweight XFCE desktop is accessible by connecting to _localhost_ from
+a remote desktop client such as Microsoft Remote Desktop or FreeRDP. You won't
+need an X11 server (such as VcXsrv or Xming) running on the Windows host.
+This comes with JetBrains Toolbox, plus Firefox and Chromium.
+
+
+
+### Customizations
+
+During installation, the Docker assets found in `src/assets/slidewsl` will be copied to `~/slidewsl`
+in the root of the WSL2 distro (or, more specifically, they are expanded from the
+encoded chunks in `getslidewsl.bat`).
+
+If you're interested in making customizations, one approach is:
+- Clone this repo to your Windows host (i.e., outside of the WSL2 distro).
+- Run `dev sync` in WSL2, and, if found, it will run `~/slidewsl/sync.sh`.
+    - During a fresh install of SlideWSL, pass the location of your script:
+      `getslidewsl myusr mypswd ..\local\sync.sh`
+    - To begin using after installation, copy your script from, for example, `/mnt/c/path/repo/local/sync.sh`, to `~/slidewsl/sync.sh`.
+- Place `sync.sh` in your repo's `local` folder. When `dev sync` runs, it copies `~/slidewsl/sync.sh` to `/tmp`
+  for execution. On return, if the timestamp of `~/slidewsl/sync.sh` changed, it runs again.
+- Example things to do in `sync.sh`:
+    - `rsync` your `src/assets/slidewsl` folder to `~/slidewsl` (with `--delete`).
+    - Use `docker-custom.env` to override `docker-base.env` with your own _web_, _angular_, _laravel_, and _db_ root folders.
+    - Use `docker-php.env` to set `APP_ENV` for your laravel app.
+    - Write a replacement `dev-server.conf` to map apps to your `ng serve` commands.
+    - Add support for browscap by copying an _.ini_ file to `~/slidewsl/php/conf`.
+    - Use `docker-phpmyadmin.env` to define `PMA_USER` and `PMA_PASSWORD`.
+    - Run `dos2unix` if necessary.
+
 
 
 ### Virtual disk image
@@ -34,36 +195,13 @@ Installation creates a sparse virtual hard disk image (using qemu-img
     - It can also create files as root before the default user is set thereby causing user provisioning to fail.
   - Bring down docker containers or their processes might be killed.
 - It's unclear if systemd shuts down gracefully when Windows shuts down or reboots:
-  [8939](https://github.com/microsoft/WSL/discussions/11225)
-  [11225](https://github.com/microsoft/WSL/issues/8939)
+  [8939](https://github.com/microsoft/WSL/discussions/11225),
+  [11225](https://github.com/microsoft/WSL/issues/8939).
 - An untested idea is to point `DOCKER_BUILDKIT_CACHE` at the disk image to speed
   things up after rebuilding.
   
 
  
-### Customizations
-
-  During installation, the Docker assets found in `src/assets/slidewsl` will be copied to `~/slidewsl`
-    in the root of the WSL2 distro (or, more specifically, they are expanded from the
-    encoded chunks in `getslidewsl.bat`).
-  
-  If you're interested in making customizations, one approach is:
-  - Clone this repo to your Windows host (i.e., outside of the WSL2 distro).
-  - Run `dev sync` in WSL2, and, if found, it will run `~/slidewsl/sync.sh`.
-    - During a fresh install of SlideWSL, pass the location of your script:
-      `getslidewsl myusr mypswd ..\local\sync.sh`
-    - To begin using after installation, copy your script from, for example, `/mnt/c/path/repo/local/sync.sh`, to `~/slidewsl/sync.sh`.
-  - Place `sync.sh` in your repo's `local` folder. When `dev sync` runs, it copies `~/slidewsl/sync.sh` to `/tmp`
-    for execution. On return, if the timestamp of `~/slidewsl/sync.sh` changed, it runs again.
-  - Example things to do in `sync.sh`:
-    - `rsync` your `src/assets/slidewsl` folder to `~/slidewsl` (with `--delete`).
-    - Use `docker-custom.env` to override `docker-base.env` with your own _web_, _angular_, _laravel_, and _db_ root folders.
-    - Use `docker-php.env` to set `APP_ENV` for your laravel app.
-    - Write a replacement `dev-server.conf` to map apps to your `ng serve` commands.
-    - Add support for browscap by copying an _.ini_ file to `~/slidewsl/php/conf`.
-    - Use `docker-phpmyadmin.env` to define `PMA_USER` and `PMA_PASSWORD`.
-    - Run `dos2unix` if necessary.
-
 ### IntelliJ
 
 #### PHP
@@ -146,115 +284,4 @@ using commands like:
 - WSL2 best practices:
   - https://www.docker.com/blog/docker-desktop-wsl-2-best-practices/
   - https://docs.docker.com/desktop/wsl/best-practices/
-
-
-### Walkthrough
-
-This is a basic representative walkthrough:
-
-- Steps:
-  - Install SlideWSL
-  - Create a starter app
-  - Launch nginx, PHP-FPM/Laravel, KeyDB, MySQL, and phpMyAdmin
-  - Launch the webpack dev server
-  - Tail the logs
-- Here's a block you can copy/paste:
-  ```bash
-  docker compose run --rm angular starter example \
-    && docker compose run --rm php starter \
-    && docker compose up -d \
-    && APPS="example" docker compose up --force-recreate angular_dev_server -d \
-    && docker compose logs -f
-  ```
-  But, if you already have a project in place, you'd skip the _starter_ steps and add a _build_ step like this:
-  ```bash
-  docker compose up -d \
-    && docker compose run --rm angular build my-project \
-    && APPS="my-project" docker compose up --force-recreate angular_dev_server -d \
-    && docker compose logs -f
-  ```
-- Update the Windows `hosts` file:
-  ```text
-  127.0.0.1 local.example.com
-  ```
-- Visit the example site:
-  - nginx: https://local.example.com (bypass self-signed cert warning)
-  - webpack dev server: http://local.example.com:4201
-  - phpMyAdmin (user/pass: root/root): http://localhost:8080/
-
----
-
-```text
-C:\SlideWSL>getslidewsl dave mypassword
-user: dave
-OracleLinux_8_7 already exists. do you wish to delete it?
-Enter Y or N: [Y,N]?Y
-
-<snip>
-
-----------------------------------------------------------
-
- Done!
-
- Start: 06:50:47.96
- End  : 06:54:08.07
-
- Now run  Windows Remote Desktop  (mstsc.exe)
- Use the computer location: localhost:3390
- Username: dave (and the password you provided)
-
- Or, for a terminal: wsl or oraclelinux87
- Or, for ssh: ssh dave@localhost -p 2223
-
-----------------------------------------------------------
-
-
-C:\SlideWSL>wsl
-|
-| Welcome to the SlideWSL development environment!
-|
-| <snip>
-|
-
-
-[dave@wsl ~]$ docker compose run --rm angular starter example
-generating application: example
-yarn run v1.22.19
-Packages installed successfully.
-building with: ng build example --base-href=/
-Initial Chunk Files           | Names         |  Raw Size | Estimated Transfer Size
-main.6024eba3a956365b.js      | main          | 173.64 kB |                46.40 kB
-polyfills.9acd7e87ef537323.js | polyfills     |  33.08 kB |                10.64 kB
-runtime.92c8b83a3d996273.js   | runtime       | 892 bytes |               506 bytes
-styles.ef46db3751d8e999.css   | styles        |   0 bytes |                       -
-                              | Initial Total | 207.59 kB |                57.53 kB
-
-
-[dave@wsl ~]$ docker compose run --rm php starter
-Created project in /laravel/.
-Updating dependencies
-Publishing complete.
-
-
-[dave@wsl ~]$ docker compose up -d
-✔ Container keydb-node3       Started
-✔ Container keydb-node2       Started
-✔ Container slidewsl-init0-1  Exited
-✔ Container keydb-node1       Started
-✔ Container slidewsl-init-1   Started
-✔ Container mysql             Started
-✔ Container phpmyadmin        Started
-✔ Container php-fpm           Started
-✔ Container nginx             Started
-
-
-[dave@wsl ~]$ APPS="example" docker compose up --force-recreate angular_dev_server -d
-✔ Container angular_dev_server Started
-
-
-[dave@wsl ~]$ docker compose logs -f
-<snip>
-^C canceled
-
-[dave@wsl ~]$
-```
+  - https://learn.microsoft.com/en-us/windows/wsl/setup/environment
