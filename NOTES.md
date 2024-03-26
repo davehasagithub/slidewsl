@@ -1,7 +1,5 @@
 # Notes
 
-_This page includes random notes that could one day become proper documentation._
-
 ### Development environment
 
 <img alt="screenshot" src="./devhelp.png" width="500" />
@@ -16,6 +14,32 @@ _This page includes random notes that could one day become proper documentation.
     need an X11 server (such as VcXsrv or Xming) running on the Windows host.
   This comes with JetBrains Toolbox, plus Firefox and Chromium.
 
+
+### Virtual disk image
+
+Installation creates a sparse virtual hard disk image (using qemu-img
+  in the qcow2 format).
+  It's intended to be used for project and database files.
+  The disk image can be disconnected in order to rebuild the underlying
+  WSL2 host; it can then be seamlessly reattached without loss of data
+  or configuration (such as local changes, branches and shelved items).
+- The image file is created at `%userprofile%\slidewsl.img`
+  and mounted at `/mnt/slidewsl` (with the sticky bit like _/tmp_).
+  It's set to grow to a max size of 20G.
+- Symlinks (such as from $HOME to /mnt) are possible, but currently not advised.
+- The mount is controlled by the `manage-qemu-nbd` systemd service.
+- When unmounting or rebuilding WSL:
+  - Be sure to stop IntelliJ, becauses:
+    - It will attempt to create files under the mount folder when the image isn't mounted.
+    - It can also create files as root before the default user is set thereby causing user provisioning to fail.
+  - Bring down docker containers or their processes might be killed.
+- It's unclear if systemd shuts down gracefully when Windows shuts down or reboots:
+  [8939](https://github.com/microsoft/WSL/discussions/11225)
+  [11225](https://github.com/microsoft/WSL/issues/8939)
+- An untested idea is to point `DOCKER_BUILDKIT_CACHE` at the disk image to speed
+  things up after rebuilding.
+  
+
  
 ### Customizations
 
@@ -23,8 +47,8 @@ _This page includes random notes that could one day become proper documentation.
     in the root of the WSL2 distro (or, more specifically, they are expanded from the
     encoded chunks in `getslidewsl.bat`).
   
-  If you're interested in making customizations, one approach is to clone this repo to your
-    Windows host (i.e., outside of the WSL2 distro).
+  If you're interested in making customizations, one approach is:
+  - Clone this repo to your Windows host (i.e., outside of the WSL2 distro).
   - Run `dev sync` in WSL2, and, if found, it will run `~/slidewsl/sync.sh`.
     - During a fresh install of SlideWSL, pass the location of your script:
       `getslidewsl myusr mypswd ..\local\sync.sh`
@@ -117,15 +141,7 @@ using commands like:
   - plan9/9p https://en.wikipedia.org/wiki/9P_(protocol)
   - plan9/9p https://superuser.com/questions/1643551/windows-10-wsl-mount-creates-9p-filesystem-instead-of-drvfs
 
-- Hints on attaching an ext4 file system in WSL2:
-
-  ```bash
-  truncate -s 10G /mnt/d/database.vhd
-  mkfs.ext4 /mnt/d/database.vhd
-  mkdir /mnt/database
-  mount -o loop /mnt/d/database.vhd /mnt/database
-  sh -c 'echo /mnt/d/database.img /mnt/database ext4 loop 0 0 >>/etc/fstab'
-  ```
+- [Synchronized file shares](https://docs.docker.com/desktop/synchronized-file-sharing/)
 
 - WSL2 best practices:
   - https://www.docker.com/blog/docker-desktop-wsl-2-best-practices/
@@ -143,13 +159,20 @@ This is a basic representative walkthrough:
   - Launch the webpack dev server
   - Tail the logs
 - Here's a block you can copy/paste:
-    ```bash
-    docker compose run --rm angular starter example \
-      && docker compose run --rm php starter \
-      && docker compose up -d \
-      && APPS="example" docker compose up --force-recreate angular_dev_server -d \
-      && docker compose logs -f
-    ```
+  ```bash
+  docker compose run --rm angular starter example \
+    && docker compose run --rm php starter \
+    && docker compose up -d \
+    && APPS="example" docker compose up --force-recreate angular_dev_server -d \
+    && docker compose logs -f
+  ```
+  But, if you already have a project in place, you'd skip the _starter_ steps and add a _build_ step like this:
+  ```bash
+  docker compose up -d \
+    && docker compose run --rm angular build my-project \
+    && APPS="my-project" docker compose up --force-recreate angular_dev_server -d \
+    && docker compose logs -f
+  ```
 - Update the Windows `hosts` file:
   ```text
   127.0.0.1 local.example.com

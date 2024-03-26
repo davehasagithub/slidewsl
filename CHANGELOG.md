@@ -1,6 +1,11 @@
 
 ---
 
+**03/25/2024**
+
+- Add virtual disk image support. 
+- Move `/docker` under $HOME as `~/slidewsl`.
+
 **03/22/2024**
 
 - Remove the devcontainer. (It was only used as a terminal for docker commands that
