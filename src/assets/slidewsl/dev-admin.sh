@@ -12,8 +12,8 @@ main() {
   elif [[ "$OPT" == "list" ]]; then
     shift
     _call list "$@"
-  elif [[ "$OPT" == "clean" ]]; then
-    _call clean
+  elif [[ "$OPT" == "stop" ]]; then
+    _call stop
   else
     _call usage
   fi
@@ -51,24 +51,31 @@ EOF
   return 1
 }
 
-reset() {
-  if [[ "$1" == "cache" ]]; then
-    docker builder prune -af
-  fi
-  ids=$(docker ps -aq)
+stop() {
+  local ids
+  ids=$(docker ps -q)
+  echo "containers: $ids"
   if [[ "$ids" ]]; then
     # shellcheck disable=SC2086
     docker container stop $ids || true
   fi
+}
+
+reset() {
+  stop
   docker container prune -f || true
   docker image prune -af || true
   docker volume prune -af || true
   docker network prune -f || true
+  if [[ "$1" == "cache" ]]; then
+    docker builder prune -af
+  fi
   # docker system prune --all || true
   echo "done"
 }
 
 list() {
+  local HIGHLIGHT NC
   HIGHLIGHT="\x1b[33;44m"
   NC='\033[0m'
   echo -e "\n${HIGHLIGHT} images ${NC}"
@@ -90,6 +97,7 @@ list() {
 }
 
 sync() {
+  local script initial_timestamp current_timestamp
   script="$HOME/slidewsl/sync.sh"
   if [ -f "$script" ]; then
     echo "Running sync.sh"
@@ -110,7 +118,10 @@ sync() {
 }
 
 _call() {
-  func=${1:-}; shift; $func "$@"
+  local func
+  func=${1:-};
+  shift;
+  $func "$@"
 }
 
 main "$@"

@@ -54,7 +54,7 @@ if not "%syncPath%" == "" echo sync: %syncPath%
 set "WSL_UTF8=1" & @REM https://github.com/microsoft/WSL/releases/tag/0.64.0
 
 wsl --status >nul
-if %errorlevel% neq 0 (
+if errorlevel 1 (
   goto SubsystemFailure
 )
 
@@ -67,12 +67,18 @@ if %num_chunks% equ 0 (
 )
 
 wsl -d %distro% true >nul
-if %errorlevel% equ 0 (
+if not errorlevel 1 (
   echo %distro% already exists. do you wish to delete it?
   choice /C YN /M "Enter Y or N:"
   if errorlevel 2 (
     echo Aborting.
     exit /b 1
+  )
+
+  wsl -l --running | findstr /C:"%distro%" >nul
+  if not errorlevel 1 (
+    echo Unmount disk image
+    wsl -d %distro% -u root systemctl stop manage-qemu-nbd || true
   )
 )
 
@@ -83,7 +89,7 @@ wsl --update
 wsl --set-default-version 2
 wsl --unregister %distro% >nul
 %distroExe% install --root
-if %errorlevel% neq 0 (
+if errorlevel 1 (
   goto SubsystemFailure
 )
 
@@ -118,14 +124,19 @@ if not "%syncPath%" == "" (
 )
 
 echo provisioning
-@REM -------------------------------------------------------------------------------------------
-wsl -u root -e sh -c "cd \"%tempProvisionPath%/wsl\"; bash \"%tempProvisionScript%\" \"%username%\""
-@REM -------------------------------------------------------------------------------------------
+@REM -----------------------------------------------------------------------------------------------------------------
+wsl -u root -e sh -c "cd \"%tempProvisionPath%/wsl\"; bash \"%tempProvisionScript%\" \"%username%\" \"%userprofile%\""
+@REM -----------------------------------------------------------------------------------------------------------------
 
-if %errorlevel% neq 0 (
+if errorlevel 1 (
   echo Aborting.
   exit /b 1
 )
+
+@REM needed for \\wsl$ to pick up the new default user
+echo restarting wsl
+wsl -d %distro% -u root systemctl stop manage-qemu-nbd || true
+wsl --shutdown
 
 rmdir /s /q "%tempProvisionPath%"
 

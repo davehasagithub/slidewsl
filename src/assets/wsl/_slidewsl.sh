@@ -11,6 +11,7 @@ main() {
   _call install_browsers
   _call install_jetbrains_toolbox
   _call set_up_env
+  _call set_up_nbd
   _call set_up_skel
   _call set_up_user
 }
@@ -21,9 +22,8 @@ init() {
     exit 1
   fi
 
-  if [ -z "$1" ]; then
-    echo "Error: username was not provided"
-    echo "Usage: $0 <username>"
+  if [[ -z "$1" || -z "$2" ]]; then
+    echo "Usage: $0 <username> <user-profile-folder>"
     exit 1
   fi
 
@@ -31,13 +31,15 @@ init() {
   # ulimit -n 1024
 
   export username="$1"
+  userProfileFolder=$(wslpath "$2")
+  export userProfileFolder
   assetFolder="$(pwd)"
   export assetFolder
   cd ~ || exit
 }
 
 base_installs() {
-  dnf install -y dnf-utils zip unzip git bash-completion dbus-x11 telnet which hostname rsync
+  dnf install -y dnf-utils zip unzip git bash-completion dbus-x11 telnet which hostname rsync lsof qemu-img
   dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
   /usr/bin/crb enable
 }
@@ -117,6 +119,14 @@ set_up_env() {
   chmod 755 /usr/local/bin/daveml.sh
 }
 
+set_up_nbd() {
+  echo "IMG_LOCATION=$userProfileFolder/slidewsl.img" >/etc/slidewsl-dimgrc
+  cp "$assetFolder/disk-image.sh" /usr/local/bin/slidewsl-img.sh
+  chmod 755 /usr/local/bin/slidewsl-img.sh
+  cp "$assetFolder/manage-qemu-nbd.service" /etc/systemd/system
+  systemctl enable --now manage-qemu-nbd.service
+}
+
 set_up_skel() {
   # prevent conflict with bash control-p for previous command
   mkdir -p /etc/skel/.docker
@@ -134,12 +144,19 @@ set_up_user() {
   chmod 440 "/etc/sudoers.d/$username"
 
   sudo -u "$username" -i sh -c "
+    echo running as $username;
+    echo make /mnt/slidewsl/$username;
+    mkdir -p /mnt/slidewsl/$username/db /mnt/slidewsl/$username/src;
+    ls -l /mnt/slidewsl;
+
     mkdir -p Desktop \
       && cp $assetFolder/jbtoolbox.desktop Desktop \
       && chmod +x Desktop/jbtoolbox.desktop;
 
     mkdir -p slidewsl \
-      && rsync -av $assetFolder/../slidewsl/ slidewsl
+      && rsync -av $assetFolder/../slidewsl/ slidewsl;
+
+    slidewsl/dev-admin.sh sync
   "
 }
 
