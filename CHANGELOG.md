@@ -3,9 +3,9 @@
 
 **03/27/2024**
 
-- Remove add-host.sh
+- Rename repo files for clarity; remove add-host.sh
 
-- **03/25/2024**
+**03/25/2024**
 
 - Add virtual disk image support. 
 - Move `/docker` under $HOME as `~/slidewsl`.
