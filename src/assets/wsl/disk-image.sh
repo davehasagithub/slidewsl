@@ -118,7 +118,6 @@ failed() {
 trap 'failed' ERR
 
 [ -f "/etc/slidewsl-dimgrc" ] && source /etc/slidewsl-dimgrc
-[ -f "$HOME/.slidewsl-dimgrc" ] && source .slidewsl-dimgrc
 
 export MOUNT_LOCATION=/mnt/slidewsl/
 
