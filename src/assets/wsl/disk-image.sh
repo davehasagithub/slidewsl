@@ -52,8 +52,6 @@ kill_procs() {
 }
 
 stop() {
-  sudo qemu-nbd --flush /dev/nbd0
-
   # sudo bash -c "umount /dev/nbd0; qemu-nbd --disconnect /dev/nbd0"
   if ! umount /dev/nbd0; then
     echo "- umount failed"
@@ -117,7 +115,7 @@ failed() {
 
 trap 'failed' ERR
 
-[ -f "/etc/slidewsl-dimgrc" ] && source /etc/slidewsl-dimgrc
+[ -f "/etc/disk-image.conf" ] && source /etc/disk-image.conf
 
 export MOUNT_LOCATION=/mnt/slidewsl/
 

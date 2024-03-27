@@ -62,8 +62,8 @@ install_docker() {
   dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
   mkdir -p /etc/docker
   mkdir -p /etc/systemd/system/docker.service.d
-  cp "$assetFolder/daemon.json" /etc/docker
-  cp "$assetFolder/override.conf" /etc/systemd/system/docker.service.d
+  cp "$assetFolder/docker-daemon.json" /etc/docker/daemon.json
+  cp "$assetFolder/docker-override.conf" /etc/systemd/system/docker.service.d/override.conf
   chmod 644 /etc/docker/daemon.json
   chmod 644 /etc/systemd/system/docker.service.d/override.conf
   systemctl enable --now docker.service
@@ -73,9 +73,9 @@ install_docker() {
 install_xfce_and_xrdp() {
   dnf group install -y --setopt=group_package_types="mandatory" xfce
   dnf install -y xrdp xfce4-terminal xfce4-appfinder
-  cp "$assetFolder/systemd_user_context.sh" /usr/libexec/xrdp
-  chmod +x /usr/libexec/xrdp/systemd_user_context.sh
-  wm_fixup="if [ -x /usr/bin/systemctl -a \"\$XDG_RUNTIME_DIR\" = \"/run/user/\"\`id -u\` ]; then eval \"\`\${0%/*}/systemd_user_context.sh init -p \$\$\`\"; fi"
+  cp "$assetFolder/systemd-user-context.sh" /usr/libexec/xrdp/systemd-user-context.sh
+  chmod +x /usr/libexec/xrdp/systemd-user-context.sh
+  wm_fixup="if [ -x /usr/bin/systemctl -a \"\$XDG_RUNTIME_DIR\" = \"/run/user/\"\`id -u\` ]; then eval \"\`\${0%/*}/systemd-user-context.sh init -p \$\$\`\"; fi"
   sed -i "/^wm_start$/i $wm_fixup" /usr/libexec/xrdp/startwm.sh
   sed -ri "s#\. /etc/X11/xinit/Xsession#startxfce4#" /usr/libexec/xrdp/startwm.sh
   sed -ri "s/^port=3389/port=3390/" /etc/xrdp/xrdp.ini
@@ -111,11 +111,11 @@ set_up_env() {
 }
 
 set_up_nbd() {
-  echo "IMG_LOCATION=$userProfileFolder/slidewsl.img" >/etc/slidewsl-dimgrc
+  echo "IMG_LOCATION=$userProfileFolder/slidewsl.img" >/etc/disk-image.conf
   cp "$assetFolder/disk-image.sh" /usr/local/bin/slidewsl-img.sh
   chmod 755 /usr/local/bin/slidewsl-img.sh
-  cp "$assetFolder/manage-qemu-nbd.service" /etc/systemd/system
-  systemctl enable --now manage-qemu-nbd.service
+  cp "$assetFolder/disk-image.service" /etc/systemd/system
+  systemctl enable --now disk-image.service
 }
 
 set_up_skel() {
@@ -126,7 +126,7 @@ set_up_skel() {
   echo "cd ~" >>/etc/skel/.bashrc;
 
   mkdir -p /etc/skel/Desktop \
-    && cp "$assetFolder/jbtoolbox.desktop" /etc/skel/Desktop \
+    && cp "$assetFolder/xfce-jbtoolbox.desktop" /etc/skel/Desktop/jbtoolbox.desktop \
     && chmod +x /etc/skel/Desktop/jbtoolbox.desktop;
 
   mkdir -p /etc/skel/slidewsl \

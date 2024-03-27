@@ -188,7 +188,7 @@ Installation creates a sparse virtual hard disk image (using qemu-img
   and mounted at `/mnt/slidewsl`.
   It's set to grow to a max size of 20G.
 - Symlinks (such as from $HOME to /mnt) are possible, but currently not advised.
-- The mount is controlled by the `manage-qemu-nbd` systemd service.
+- The mount is controlled by the `disk-image` systemd service.
 - When unmounting or rebuilding WSL:
   - Be sure to stop IntelliJ, becauses:
     - It will attempt to create files under the mount folder when the image isn't mounted.

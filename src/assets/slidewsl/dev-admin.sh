@@ -40,7 +40,7 @@ usage() {
     <WXX>Make laravel starter   <CXX>docker compose run --rm php starter
     <WXX>Check keydb cluster    <CXX>docker compose exec -it keydb-node1 keydb-cli cluster info
     <WXX>Interactive terminal   <CXX>docker compose exec -it -u root <YXX><service><CXX> bash
-    <WXX>                        ⤷ then, for example: <CXX>apt update; apt install -y <YXX>iputils-ping iproute2 net-tools telnet vim less
+    <WXX> ⤷ then, for example:  <CXX>apt update; apt install -y <YXX>iputils-ping iproute2 net-tools telnet vim less
 
     <WXX>Run sync.sh script     <CXX>${ALIAS_USED:-$0} sync
     <WXX>See Docker resources   <CXX>${ALIAS_USED:-$0} list <YXX>[stats]

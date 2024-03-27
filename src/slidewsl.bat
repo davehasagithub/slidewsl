@@ -78,7 +78,7 @@ if not errorlevel 1 (
   wsl -l --running | findstr /C:"%distro%" >nul
   if not errorlevel 1 (
     echo Unmount disk image
-    wsl -d %distro% -u root systemctl stop manage-qemu-nbd || true
+    wsl -d %distro% -u root -e sh -c "systemctl stop disk-image || true"
   )
 )
 
@@ -135,7 +135,7 @@ if errorlevel 1 (
 
 @REM needed for \\wsl$ to pick up the new default user
 echo restarting wsl
-wsl -d %distro% -u root systemctl stop manage-qemu-nbd || true
+wsl -u root -e sh -c "systemctl stop disk-image || true"
 wsl --shutdown
 
 rmdir /s /q "%tempProvisionPath%"
