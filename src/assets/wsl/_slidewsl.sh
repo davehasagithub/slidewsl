@@ -133,29 +133,23 @@ set_up_skel() {
   cp "$assetFolder"/docker-config.json /etc/skel/.docker/config.json
 
   echo "cd ~" >>/etc/skel/.bashrc;
+
+  mkdir -p /etc/skel/Desktop \
+    && cp "$assetFolder/jbtoolbox.desktop" /etc/skel/Desktop \
+    && chmod +x /etc/skel/Desktop/jbtoolbox.desktop;
+
+  mkdir -p /etc/skel/slidewsl \
+    && rsync -av "$assetFolder/../slidewsl/" /etc/skel/slidewsl;
 }
 
 set_up_user() {
-  useradd "$username" --create-home
-  usermod -aG docker "$username"
-
+  useradd "$username" --create-home -G docker
   echo "$username:%password%" | chpasswd
+
   echo "$username ALL=(ALL) NOPASSWD:ALL" | sudo tee -a "/etc/sudoers.d/$username"
   chmod 440 "/etc/sudoers.d/$username"
 
   sudo -u "$username" -i sh -c "
-    echo running as $username;
-    echo make /mnt/slidewsl/$username;
-    mkdir -p /mnt/slidewsl/$username/db /mnt/slidewsl/$username/src;
-    ls -l /mnt/slidewsl;
-
-    mkdir -p Desktop \
-      && cp $assetFolder/jbtoolbox.desktop Desktop \
-      && chmod +x Desktop/jbtoolbox.desktop;
-
-    mkdir -p slidewsl \
-      && rsync -av $assetFolder/../slidewsl/ slidewsl;
-
     slidewsl/dev-admin.sh sync
   "
 }
