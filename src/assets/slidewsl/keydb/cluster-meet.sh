@@ -12,6 +12,7 @@ if [[ "$HOSTNAME" == "keydb-node1" ]]; then
   {
     max_attempts=100
     retry_interval=5
+    attempts_with_resolved=0
 
     echo "Cluster init"
     for (( attempt=1; attempt<=max_attempts; attempt++ )); do
@@ -21,17 +22,21 @@ if [[ "$HOSTNAME" == "keydb-node1" ]]; then
       node2=$(getent hosts keydb-node2 | awk '{ print $1 }')
       node3=$(getent hosts keydb-node3 | awk '{ print $1 }')
       if [[ -n "$node1" && -n "$node2" && -n "$node3" ]]; then
+        ((attempts_with_resolved++))
+        if [[ $attempts_with_resolved == 1 ]]; then
+          echo "Resolved all nodes - node1: $node1, node2: $node2, node3: $node3"
+        fi
+
+        # if [ $((attempts_with_resolved % 3)) -eq 0 ]; then
+        echo "Flush and reset."
+        echo -e "flushall\ncluster reset" | redis-cli -h "$node1"
+        echo -e "flushall\ncluster reset" | redis-cli -h "$node2"
+        echo -e "flushall\ncluster reset" | redis-cli -h "$node3"
+
         echo "Attempt $attempt to create cluster..."
         if redis-cli --cluster-yes --cluster create "$node1":6379 "$node2":6379 "$node3":6379 --cluster-replicas 0; then
           echo "Cluster creation successful!"
           break
-        fi
-
-        if [ $((attempt % 3)) -eq 0 ]; then
-          echo "Flush and reset."
-          echo -e "flushall\ncluster reset" | redis-cli -h "$node1"
-          echo -e "flushall\ncluster reset" | redis-cli -h "$node2"
-          echo -e "flushall\ncluster reset" | redis-cli -h "$node3"
         fi
       else
         echo "Unable to resolve all nodes - node1: $node1, node2: $node2, node3: $node3"

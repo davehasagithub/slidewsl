@@ -185,6 +185,8 @@ services:
     extends:
       service: keydb-node1
     volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - keydb:/data
       - ./keydb/keydb-node2:/etc/keydb
 
   keydb-node3:
@@ -193,6 +195,8 @@ services:
     extends:
       service: keydb-node1
     volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - keydb:/data
       - ./keydb/keydb-node3:/etc/keydb
 
   # --------------------------------------------------------------------------------

@@ -31,7 +31,7 @@ usage() {
     <GBX>Run webpack dev server <CLR><CXX>APPS="<YBX><app> <CLR><YXX>[...]<CXX>" docker compose up --force-recreate angular_dev_server -d
     <GBX>Compile an angular app <CLR><CXX>docker compose run --rm angular build <YBX><app> <CLR><YXX>[<base-href> [<other-args...>]]
     <GBX>See what's running     <CLR><CXX>docker compose ps
-    <GBX>Stop all services      <CLR><CXX>docker compose --profile "*" down
+    <GBX>Stop all services      <CLR><CXX>docker compose --profile "*" down -v
 
     <WXX>Tail a laravel log     <CXX>docker compose exec php-fpm tail -f /laravel/storage/logs/laravel_line-<YXX>YYYY<CXX>-<YXX>MM<CXX>-<YXX>DD<CXX>.log
     <WXX>Update node_modules    <CXX>docker compose run --rm angular node_modules
@@ -40,7 +40,7 @@ usage() {
     <WXX>Make laravel starter   <CXX>docker compose run --rm php starter
     <WXX>Check keydb cluster    <CXX>docker compose exec -it keydb-node1 keydb-cli cluster info
     <WXX>Interactive terminal   <CXX>docker compose exec -it -u root <YXX><service><CXX> bash
-    <WXX>                        ⤷ then, for example: <CXX>apt update; apt install -y <YXX>iputils-ping telnet vim less
+    <WXX>                        ⤷ then, for example: <CXX>apt update; apt install -y <YXX>iputils-ping iproute2 net-tools telnet vim less
 
     <WXX>Run sync.sh script     <CXX>${ALIAS_USED:-$0} sync
     <WXX>See Docker resources   <CXX>${ALIAS_USED:-$0} list <YXX>[stats]
