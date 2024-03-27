@@ -5,7 +5,6 @@ main() {
   _call base_installs
   _call keep_distro_running
   _call install_docker
-  _call support_custom_hosts
   _call install_xfce_and_xrdp
   _call install_sshd
   _call install_browsers
@@ -68,14 +67,6 @@ install_docker() {
   chmod 644 /etc/docker/daemon.json
   chmod 644 /etc/systemd/system/docker.service.d/override.conf
   systemctl enable --now docker.service
-}
-
-support_custom_hosts() {
-  cp "$assetFolder/add-host.sh" /usr/local/bin
-  cp "$assetFolder/rc.local.wsl" /etc/rc.d
-  echo /etc/rc.d/rc.local.wsl >>/etc/rc.d/rc.local
-  chmod +x /usr/local/bin/add-host.sh /etc/rc.d/rc.local.wsl /etc/rc.d/rc.local
-  /etc/rc.d/rc.local.wsl
 }
 
 # https://github.com/neutrinolabs/xrdp/issues/2491

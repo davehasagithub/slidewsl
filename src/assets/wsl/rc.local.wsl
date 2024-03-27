@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-if [ -f /etc/hosts.wsl ]; then
- cat /etc/hosts.wsl >>/etc/hosts
-fi
