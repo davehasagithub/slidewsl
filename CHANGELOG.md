@@ -8,25 +8,9 @@
 
 **03/22/2024**
 
-- Remove the devcontainer. (It was only used as a terminal for docker commands that
-ran scripts in other containers.)
-
-- _env_file_ runs after bind mounting, so it can't be used to override variables in
-_.env_. To address this, `compose.yaml` now loads _custom_ env files, before including
-`compose-slidewsl.yaml`. (Previously, the devcontainer had the overrides baked into the
-environment.)
-
-- If a volume source doesn't exist, the daemon creates it and makes _root_ the owner. To
-deal with this, services now depend on an _init_ service to ensure folders are properly
-created and writable. (This used to happen in the devcontainer launch script.)
-
-- Some compose services were collapsed into one using an entrypoint script to direct
-requests based on arguments.
-
-- devcontainer-launcher is now dev-admin. sync.sh now runs with `dev sync`.
-
+- Remove the _devcontainer_ container.
+- `devcontainer-launcher.sh` is now `dev-admin.sh`.
 - socat is no longer used.
-
 
 **03/18/2024**
 

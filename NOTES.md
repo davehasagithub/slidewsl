@@ -8,6 +8,7 @@
     - [Graphical interface](#graphical-interface)
     - [Customizations](#customizations)
     - [Virtual disk image](#virtual-disk-image)
+    - [YAML Q&A](#yaml-qa)
     - [IntelliJ](#intellij)
       - [PHP](#php)
       - [Debugging](#debugging)
@@ -15,7 +16,6 @@
     - [Miscellaneous](#miscellaneous)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 
 <!-- doctoc NOTES.md --github -->
 
@@ -185,23 +185,40 @@ Installation creates a sparse virtual hard disk image (using qemu-img
   WSL2 host; it can then be seamlessly reattached without loss of data
   or configuration (such as local changes, branches and shelved items).
 - The image file is created at `%userprofile%\slidewsl.img`
-  and mounted at `/mnt/slidewsl` (with the sticky bit like _/tmp_).
+  and mounted at `/mnt/slidewsl`.
   It's set to grow to a max size of 20G.
 - Symlinks (such as from $HOME to /mnt) are possible, but currently not advised.
 - The mount is controlled by the `manage-qemu-nbd` systemd service.
 - When unmounting or rebuilding WSL:
   - Be sure to stop IntelliJ, becauses:
     - It will attempt to create files under the mount folder when the image isn't mounted.
-    - It can also create files as root before the default user is set thereby causing user provisioning to fail.
+    - It can also create files as root before the default user is set, thereby causing user provisioning to fail.
   - Bring down docker containers or their processes might be killed.
 - It's unclear if systemd shuts down gracefully when Windows shuts down or reboots:
   [8939](https://github.com/microsoft/WSL/discussions/11225),
   [11225](https://github.com/microsoft/WSL/issues/8939).
-- An untested idea is to point `DOCKER_BUILDKIT_CACHE` at the disk image to speed
-  things up after rebuilding.
-  
 
- 
+Additional Ideas:
+- One interesting idea is to point `DOCKER_BUILDKIT_CACHE` at the disk image to speed
+  things up after rebuilding WSL2.
+- Similarly, another is to set `HISTFILE` to store `.bash_history` in the disk image.
+
+
+### YAML Q&A
+
+- Why both `compose.yaml` and `compose-slidewsl.yaml`?
+
+  _env_file_ runs after bind mounting, so it can't be used to override variables in
+  _.env_. To address this, `compose.yaml` loads _custom_ env files, before including
+  `compose-slidewsl.yaml`.
+
+- What is the _init_ service?
+
+  If a volume source doesn't exist, the daemon creates it and makes _root_ the owner. To
+  deal with this, some services depend on an _init_ service to ensure folders are properly
+  created and writable.
+
+
 ### IntelliJ
 
 #### PHP
