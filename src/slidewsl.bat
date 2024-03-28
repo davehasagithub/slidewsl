@@ -125,7 +125,7 @@ if not "%syncPath%" == "" (
 
 echo provisioning
 @REM -----------------------------------------------------------------------------------------------------------------
-wsl -u root -e sh -c "cd \"%tempProvisionPath%/wsl\"; bash \"%tempProvisionScript%\" \"%username%\" \"%userprofile%\""
+wsl -u root -e sh -c "cd \"%tempProvisionPath%/wsl\"; bash \"%tempProvisionScript%\" \"%username%\" \"%password%\" \"%userprofile%\""
 @REM -----------------------------------------------------------------------------------------------------------------
 
 if errorlevel 1 (

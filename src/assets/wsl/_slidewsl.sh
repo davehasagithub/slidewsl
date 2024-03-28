@@ -21,8 +21,8 @@ init() {
     exit 1
   fi
 
-  if [[ -z "$1" || -z "$2" ]]; then
-    echo "Usage: $0 <username> <user-profile-folder>"
+  if [[ -z "$1" || -z "$2" || -z "$3" ]]; then
+    echo "Usage: $0 <username> <password> <user-profile-folder>"
     exit 1
   fi
 
@@ -30,7 +30,8 @@ init() {
   # ulimit -n 1024
 
   export username="$1"
-  user_profile_folder=$(wslpath "$2")
+  export password="$2"
+  user_profile_folder=$(wslpath "$3")
   export user_profile_folder
   asset_folder="$(pwd)"
   export asset_folder
@@ -135,7 +136,7 @@ set_up_skel() {
 
 set_up_user() {
   useradd "$username" --create-home -G docker
-  echo "$username:%password%" | chpasswd
+  echo "$username:$password" | chpasswd
 
   echo "$username ALL=(ALL) NOPASSWD:ALL" | sudo tee -a "/etc/sudoers.d/$username"
   chmod 440 "/etc/sudoers.d/$username"
