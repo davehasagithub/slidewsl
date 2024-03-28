@@ -94,5 +94,4 @@ fabric.properties
 dist/*
 !dist/getslidewsl.bat
 local/*
-!local/.gitkeep
-
+!local/sync_example.sh
