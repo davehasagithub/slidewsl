@@ -30,10 +30,10 @@ init() {
   # ulimit -n 1024
 
   export username="$1"
-  userProfileFolder=$(wslpath "$2")
-  export userProfileFolder
-  assetFolder="$(pwd)"
-  export assetFolder
+  user_profile_folder=$(wslpath "$2")
+  export user_profile_folder
+  asset_folder="$(pwd)"
+  export asset_folder
   cd ~ || exit
 }
 
@@ -46,8 +46,8 @@ base_installs() {
 # Unusual because dbus-launch needs to be a child of the wsl init process. so, we can't use systemd,
 # a @reboot cron job, wsl.conf [boot] (windows 11 only), or setuid (doesn't apply to shell scripts)
 keep_distro_running() {
-  cp "$assetFolder/wsl-keepalive-profiled.sh" /etc/profile.d/wsl-keepalive.sh
-  cp "$assetFolder/wsl-keepalive.sh" /usr/local/bin
+  cp "$asset_folder/wsl-keepalive-profiled.sh" /etc/profile.d/wsl-keepalive.sh
+  cp "$asset_folder/wsl-keepalive.sh" /usr/local/bin
   chmod 644 /etc/profile.d/wsl-keepalive.sh
   chmod 755 /usr/local/bin/wsl-keepalive.sh
   echo "ALL ALL=(ALL) NOPASSWD: /usr/local/bin/wsl-keepalive.sh" | sudo tee -a /etc/sudoers.d/wsl-keepalive
@@ -62,8 +62,8 @@ install_docker() {
   dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
   mkdir -p /etc/docker
   mkdir -p /etc/systemd/system/docker.service.d
-  cp "$assetFolder/docker-daemon.json" /etc/docker/daemon.json
-  cp "$assetFolder/docker-override.conf" /etc/systemd/system/docker.service.d/override.conf
+  cp "$asset_folder/docker-daemon.json" /etc/docker/daemon.json
+  cp "$asset_folder/docker-override.conf" /etc/systemd/system/docker.service.d/override.conf
   chmod 644 /etc/docker/daemon.json
   chmod 644 /etc/systemd/system/docker.service.d/override.conf
   systemctl enable --now docker.service
@@ -73,7 +73,7 @@ install_docker() {
 install_xfce_and_xrdp() {
   dnf group install -y --setopt=group_package_types="mandatory" xfce
   dnf install -y xrdp xfce4-terminal xfce4-appfinder
-  cp "$assetFolder/systemd-user-context.sh" /usr/libexec/xrdp/systemd-user-context.sh
+  cp "$asset_folder/systemd-user-context.sh" /usr/libexec/xrdp/systemd-user-context.sh
   chmod +x /usr/libexec/xrdp/systemd-user-context.sh
   wm_fixup="if [ -x /usr/bin/systemctl -a \"\$XDG_RUNTIME_DIR\" = \"/run/user/\"\`id -u\` ]; then eval \"\`\${0%/*}/systemd-user-context.sh init -p \$\$\`\"; fi"
   sed -i "/^wm_start$/i $wm_fixup" /usr/libexec/xrdp/startwm.sh
@@ -92,15 +92,15 @@ install_browsers() {
 
 install_jetbrains_toolbox() {
   dnf install -y fuse fuse-libs
-  jbToolbox=jetbrains-toolbox-2.2.1.19765.tar.gz
-  curl -sL https://download.jetbrains.com/toolbox/$jbToolbox | tar -C /opt -xzf -
+  jb_toolbox=jetbrains-toolbox-2.2.1.19765.tar.gz
+  curl -sL https://download.jetbrains.com/toolbox/$jb_toolbox | tar -C /opt -xzf -
 }
 
 set_up_env() {
-  cp "$assetFolder/wsl-env.sh" /etc/profile.d
-  cp "$assetFolder/wsl-ps1.sh" /etc/profile.d
-  cp "$assetFolder/wsl-aliases.sh" /etc/profile.d
-  cp "$assetFolder/motd.sh" /etc/profile.d
+  cp "$asset_folder/wsl-env.sh" /etc/profile.d
+  cp "$asset_folder/wsl-ps1.sh" /etc/profile.d
+  cp "$asset_folder/wsl-aliases.sh" /etc/profile.d
+  cp "$asset_folder/motd.sh" /etc/profile.d
   chmod 644 /etc/profile.d/wsl-env.sh
   chmod 644 /etc/profile.d/wsl-ps1.sh
   chmod 644 /etc/profile.d/wsl-aliases.sh
@@ -111,26 +111,26 @@ set_up_env() {
 }
 
 set_up_nbd() {
-  echo "IMG_LOCATION=$userProfileFolder/slidewsl.img" >/etc/disk-image.conf
-  cp "$assetFolder/disk-image.sh" /usr/local/bin/slidewsl-img.sh
+  echo "IMG_LOCATION=$user_profile_folder/slidewsl.img" >/etc/disk-image.conf
+  cp "$asset_folder/disk-image.sh" /usr/local/bin/slidewsl-img.sh
   chmod 755 /usr/local/bin/slidewsl-img.sh
-  cp "$assetFolder/disk-image.service" /etc/systemd/system
+  cp "$asset_folder/disk-image.service" /etc/systemd/system
   systemctl enable --now disk-image.service
 }
 
 set_up_skel() {
   # prevent conflict with bash control-p for previous command
   mkdir -p /etc/skel/.docker
-  cp "$assetFolder"/docker-config.json /etc/skel/.docker/config.json
+  cp "$asset_folder"/docker-config.json /etc/skel/.docker/config.json
 
   echo "cd ~" >>/etc/skel/.bashrc;
 
   mkdir -p /etc/skel/Desktop \
-    && cp "$assetFolder/xfce-jbtoolbox.desktop" /etc/skel/Desktop/jbtoolbox.desktop \
+    && cp "$asset_folder/xfce-jbtoolbox.desktop" /etc/skel/Desktop/jbtoolbox.desktop \
     && chmod +x /etc/skel/Desktop/jbtoolbox.desktop;
 
   mkdir -p /etc/skel/slidewsl \
-    && rsync -av "$assetFolder/../slidewsl/" /etc/skel/slidewsl;
+    && rsync -av "$asset_folder/../slidewsl/" /etc/skel/slidewsl;
 }
 
 set_up_user() {
