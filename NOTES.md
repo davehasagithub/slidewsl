@@ -153,26 +153,26 @@ This comes with JetBrains Toolbox, plus Firefox and Chromium.
 
 ### Customizations
 
-During installation, the Docker assets found in `src/assets/slidewsl` will be copied to `~/slidewsl`
-in the root of the WSL2 distro (or, more specifically, they are expanded from the
-encoded chunks in `getslidewsl.bat`).
+Preface: During installation, the Docker assets found in `src/assets/slidewsl` will be copied to `~/slidewsl`.
+More specifically, they are expanded from the encoded chunks in `getslidewsl.bat`.
 
-If you're interested in making customizations, one approach is:
-- Clone this repo to your Windows host (i.e., outside of the WSL2 distro).
-- Run `dev sync` in WSL2, and, if found, it will run `~/slidewsl/sync.sh`.
-    - During a fresh install of SlideWSL, pass the location of your script:
-      `getslidewsl myusr mypswd ..\local\sync.sh`
-    - To begin using after installation, copy your script from, for example, `/mnt/c/path/repo/local/sync.sh`, to `~/slidewsl/sync.sh`.
-- Place `sync.sh` in your repo's `local` folder. When `dev sync` runs, it copies `~/slidewsl/sync.sh` to `/tmp`
-  for execution. On return, if the timestamp of `~/slidewsl/sync.sh` changed, it runs again.
+If you're interested in making customizations, here is one approach:
+
+- Clone this repo to your Windows host (i.e., safely outside of the WSL2 distro).
+- Place `sync.sh` in your repo's `local` folder. You'll find an example sync script in the local folder.
+  - During a fresh install of SlideWSL, pass the location of your script: `getslidewsl myusr mypswd ..\local\sync.sh`
+  - If you forget, you can start using after installation by copying your script into place,
+    for example: `cp /mnt/c/users/dave/Desktop/git/slidewsl/local/sync.sh ~/slidewsl`.
+- Run `dev sync` in WSL2. If found, it copies `~/slidewsl/sync.sh` to `/tmp` for execution.
+  On return, if the timestamp of `~/slidewsl/sync.sh` changed, it runs again with the updated version.
 - Example things to do in `sync.sh`:
-    - `rsync` your `src/assets/slidewsl` folder to `~/slidewsl` (with `--delete`).
-    - Use `docker-custom.env` to override `docker-base.env` with your own _web_, _angular_, _laravel_, and _db_ root folders.
-    - Use `docker-php.env` to set `APP_ENV` for your laravel app.
-    - Write a replacement `dev-server.conf` to map apps to your `ng serve` commands.
-    - Add support for browscap by copying an _.ini_ file to `~/slidewsl/php/conf`.
-    - Use `docker-phpmyadmin.env` to define `PMA_USER` and `PMA_PASSWORD`.
-    - Run `dos2unix` if necessary.
+  - `rsync` your `src/assets/slidewsl` folder to `~/slidewsl`.
+  - Use `docker-custom.env` to override `docker-base.env` with your own _web_, _angular_, _laravel_, and _db_ folders.
+  - Use `docker-php.env` to set `APP_ENV` for your laravel app.
+  - Write a replacement `dev-server.conf` to map apps to custom `ng serve` commands.
+  - Add support for browscap by copying an _.ini_ file to `~/slidewsl/php/conf`.
+  - Use `docker-phpmyadmin.env` to define `PMA_USER` and `PMA_PASSWORD`.
+  - Run `dos2unix` if necessary.
 
 
 
@@ -220,6 +220,8 @@ Additional Ideas:
 
 
 ### IntelliJ
+
+Open your project using: `\\wsl$\OracleLinux_8_7\mnt\slidewsl\<username>\src`.
 
 #### PHP
 
