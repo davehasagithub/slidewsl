@@ -11,85 +11,55 @@
 
 **03/27/2024**
 
-- Rename repo files for clarity; remove add-host.sh
+- Rename repo files for clarity, remove add-host.sh
 
 **03/25/2024**
 
-- Add virtual disk image support. 
-- Move `/docker` under $HOME as `~/slidewsl`.
+- Add virtual disk image support
+- Move `/docker` under $HOME as `~/slidewsl`
 
 **03/22/2024**
 
-- Remove the _devcontainer_ container.
-- `devcontainer-launcher.sh` is now `dev-admin.sh`.
-- socat is no longer used.
+- Remove the _devcontainer_ container and socat
+- Change `devcontainer-launcher.sh` to `dev-admin.sh`
 
 **03/18/2024**
 
-- SSL: Add self-signed cert to nginx
-- Add php-cs-fixer, phpstan, psalm
+- Generate self-signed cert in nginx container
+- Add php-cs-fixer, phpstan, psalm to php container
 
 **03/16/2024**
 
-- Add mysql and phpmyadmin
+- Add mysql and phpmyadmin containers
 
 **03/14/2024**
 
-- Add keydb cluster
+- Add containers for keydb cluster
 
 **03/10/2024**
 
 - Add nginx and php-fpm containers
-  - Support webpack dev server and dist folder mappings
-  - Add script for composer install
-  - Add script for creating laravel starter apps
-- Refactor wsl distro
-  - Move docker folder from `~` to `/`
-  - Remove uid/gid handling from batch script
-- Refactor angular container
-  - Move dev server configs to key/value .conf file
-  - Extract a script for creating angular starter apps
-  - Support arbitrary arguments to ng build
-- Refactor devcontainer
-  - Reduce needed env vars
-  - Add `dchelp` to reshow motd
-  - Install [daveml](https://github.com/davehasagithub/daveml/) for motd
+- Support composer installs and webpack dev server
+- Add scripts to create starter laravel and angular apps
+- Reduce needed env vars
+- Include [daveml](https://github.com/davehasagithub/daveml/)
 
 **03/03/2024**
 
-- Add Angular support to the devcontainer
-- Improve `devcontainer-launcher.sh` so that `reset` (or `reset cache`) now purges all containers, images,
-and build cache; `list` (or `list stats`) shows all containers, images, and resource usage
-stats; and `sync.sh` was fixed to recognize the need to restart if
-the sync script itself was updated. Also, `sync.sh` now runs first
-before all actions.
-- Fix `ctrl-p` conflict in the devcontainer between Docker `detachKeys`
-sequence and the shortcut for bash command history
-- Mount timezone files to the devcontainer
-- `getslidewsl.bat` now supports passing the location of sync.sh so that
-it can be moved into position for the initial creation of the devcontainer.
+- Add angular container
+- Add `reset` and `list` to `devcontainer-launcher.sh`
+- Restart `sync.sh` if script itself was updated
+- Fix `ctrl-p` conflict between Docker `detachKeys` sequence and bash command history shortcut
+- Mount timezone files
+- Support `sync.sh` path as argument to `getslidewsl.bat`
 
 **02/25/2024**
-- The build technique now supports embedding multiple assets into
-the batch file. It works very similar to before, except now it
-embeds the base64 encoded chunks resulting from tarring and
-zipping the entire assets/ folder. These files are available for use
-during provisioning, so, incredibly, the shell script no longer resorts to
-creating files with echo and heredoc.
-- SlideWSL now includes a devcontainer. Shout out to [@jblotus](https://github.com/jblotus)
-for teaching me about Docker-from-Docker!
-- Remove NodeJS and Yarn from the WSL2 distro
+- Support embedding multiple assets into `getslidewsl.bat`
+- Add a devcontainer container
+- Remove NodeJS and Yarn
 
 **02/20/2024 [Initial release]**
 
-- Builds a WSL2 distro running XFCE
-- Accessible over RDP or SSH
-- Bundled with:
-  - Git, Docker (daemon and CLI), ~~NodeJS 14.20.1~~, ~~Yarn 1.22.19~~, Firefox, Chromium,
-    and JetBrains Toolbox (with a Desktop shortcut)
-  - `/usr/local/bin/add-host.sh`: This can be used to add persistent entries to the WSL2 hosts file.
-  - `/etc/profile.d/wsl-keepalive.sh`: Used to keep the WSL2 instance from [going idle](https://github.com/microsoft/WSL/issues/8654#issuecomment-1195973431) and terminating.
-- Build technique: `build.sh` generates `dist/getslidewsl.bat` by embedding
-`slidewsl.sh` into base64 chunks that become a series of variables in the
-batch file. These are then decoded to reconstitute the script for
-provisioning the distro.
+- Build a WSL2 distro running XFCE accessible over RDP or SSH
+- Bundle with Git, Docker, ~~NodeJS 14.20.1~~, ~~Yarn 1.22.19~~, Firefox, Chromium, JetBrains Toolbox
+- Support embedding `slidewsl.sh` inside `dist/getslidewsl.bat`
