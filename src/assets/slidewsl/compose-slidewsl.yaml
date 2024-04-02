@@ -42,6 +42,9 @@ services:
       additional_contexts:
         shared: _shared
       target: base
+      args:
+        - NODE_VERSION=$NODE_VERSION
+        - NG_CLI_VERSION=$NG_CLI_VERSION
     user: "${WSL_UID}:${WSL_GID}"
     volumes:
       - ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}:/angular
@@ -116,6 +119,15 @@ services:
       additional_contexts:
         shared: _shared
       target: base
+      args:
+        - PHP_VERSION=$PHP_VERSION
+        - PHP_REDIS_VERSION=$PHP_REDIS_VERSION
+        - XDEBUG_VERSION=$XDEBUG_VERSION
+        - COMPOSER_HASH=$COMPOSER_HASH
+        - COMPOSER_VERSION=$COMPOSER_VERSION
+        - PHP_CS_FIXER_VERSION=$PHP_CS_FIXER_VERSION
+        - PHP_STAN_VERSION=$PHP_STAN_VERSION
+        - PSALM_VERSION=$PSALM_VERSION
     user: "${WSL_UID}:${WSL_GID}"
     volumes:
       - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/webroot

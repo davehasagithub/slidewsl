@@ -1,4 +1,13 @@
-FROM php:7.4-fpm as base
+ARG PHP_VERSION
+FROM php:${PHP_VERSION}-fpm as base
+
+ARG PHP_REDIS_VERSION
+ARG XDEBUG_VERSION
+ARG COMPOSER_HASH
+ARG COMPOSER_VERSION
+ARG PHP_CS_FIXER_VERSION
+ARG PHP_STAN_VERSION
+ARG PSALM_VERSION
 
 #RUN useradd --system --no-create-home --home /nonexistent --shell /bin/false php
 RUN useradd php --create-home
@@ -24,16 +33,16 @@ RUN --mount=type=cache,sharing=locked,target=/var/cache/apt \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pecl install redis-5.2.1 \
-	&& pecl install xdebug-3.0.4 \
+RUN pecl install redis-${PHP_REDIS_VERSION} \
+	&& pecl install xdebug-${XDEBUG_VERSION} \
 	&& docker-php-ext-enable redis xdebug
 
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
-RUN wget -nv https://raw.githubusercontent.com/composer/getcomposer.org/c19391050a3d81f65e61049ebc30dbd4f5a99603/web/installer -O /tmp/composer_2.1.6.phar \
-    && cat /tmp/composer_2.1.6.phar | php -- --version="2.1.6" --install-dir="/usr/local/bin" --filename="composer" \
+RUN wget -nv https://raw.githubusercontent.com/composer/getcomposer.org/${COMPOSER_HASH}/web/installer -O /tmp/composer_${COMPOSER_VERSION}.phar \
+    && cat /tmp/composer_${COMPOSER_VERSION}.phar | php -- --version="${COMPOSER_VERSION}" --install-dir="/usr/local/bin" --filename="composer" \
     && mkdir -p /tools \
-    && composer require --working-dir=/tools friendsofphp/php-cs-fixer:3.1.0 phpstan/phpstan:0.12.96 vimeo/psalm:4.9.3 --no-interaction
+    && composer require --working-dir=/tools friendsofphp/php-cs-fixer:${PHP_CS_FIXER_VERSION} phpstan/phpstan:${PHP_STAN_VERSION} vimeo/psalm:${PSALM_VERSION} --no-interaction
 
 ENV PATH="$PATH:/usr/local/bin/php-scripts/"
 
