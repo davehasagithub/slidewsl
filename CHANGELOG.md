@@ -1,6 +1,14 @@
 
 ---
 
+**04/02/2024**
+
+- Move php and angular version info to env
+
+**03/28/2024**
+
+- Add sample sync script, fix password issue, use snake_case variable names
+
 **03/27/2024**
 
 - Rename repo files for clarity; remove add-host.sh
