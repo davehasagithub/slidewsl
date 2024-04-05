@@ -13,7 +13,15 @@ fi
 
 app="${1:-starter}"
 echo "generating application: $app"
-yarn run ng generate application "$app" --routing=true --style=scss --ssr=false
+
+full_cli_version=$(grep @angular/cli@ < yarn.lock)
+major_cli_version=$(expr "$full_cli_version" : '[^0-9]*\([0-9]*\)')
+echo angular version "$major_cli_version"
+if [[ $major_cli_version -ge 17 ]]; then
+  yarn run ng generate application "$app" --routing=true --style=scss --ssr=false
+else
+  yarn run ng generate application "$app" --routing=true --style=scss
+fi
 
 cat <<EOF | sed "s/^  //" >"projects/$app/src/app/app.component.html"
   <p style="margin: 1em">
