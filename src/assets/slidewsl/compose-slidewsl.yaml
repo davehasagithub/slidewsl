@@ -89,8 +89,8 @@ services:
         shared: _shared
     user: "${WSL_UID}:${WSL_GID}"
     ports:
-      - "0.0.0.0:4200-4210:4200-4210"
-      - "0.0.0.0:443:4430"
+      - "0.0.0.0:${ANGULAR_DEV_SERVER_PORT_RANGE:-4200-4210}:4200-4210"
+      - "0.0.0.0:${NGINX_SECURE_PORT:-443}:4430"
     networks:
       - php-fpm
       - angular_dev_server
@@ -256,7 +256,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ./phpmyadmin/conf.d:/etc/phpmyadmin/conf.d
     ports:
-      - "0.0.0.0:8080:80"
+      - "0.0.0.0:${PHPMYADMIN_PORT:-8080}:80"
     env_file:
       - docker-base.env
       - path: docker-custom.env
