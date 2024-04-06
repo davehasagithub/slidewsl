@@ -4,6 +4,7 @@ networks:
   php-fpm:
   keydb:
   mysql:
+  angular_dev_server:
 
 volumes:
   keydb:
@@ -70,8 +71,8 @@ services:
       target: dev_server
     environment:
       APPS: ${APPS:-app-not-specified}
-    ports:
-      - "0.0.0.0:4300-4310:4300-4310"
+    networks:
+      - angular_dev_server
     depends_on:
       - init
       - nginx
@@ -91,8 +92,8 @@ services:
       - "0.0.0.0:4200-4210:4200-4210"
       - "0.0.0.0:443:4430"
     networks:
-      - default
       - php-fpm
+      - angular_dev_server
     volumes:
       - ./nginx/templates:/etc/nginx/templates:ro
       - ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}:/angular
