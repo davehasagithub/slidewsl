@@ -165,9 +165,11 @@ If you're interested in making customizations, here is one approach:
     for example: `cp /mnt/c/users/dave/Desktop/git/slidewsl/local/sync.sh ~/slidewsl`.
 - Run `dev sync` in WSL2. If found, it copies `~/slidewsl/sync.sh` to `/tmp` for execution.
   On return, if the timestamp of `~/slidewsl/sync.sh` changed, it runs again with the updated version.
-- Example things to do in `sync.sh`:
+- Here are some ways to use `sync.sh`:
   - `rsync` your `src/assets/slidewsl` folder to `~/slidewsl`.
-  - Use `docker-custom.env` to override `docker-base.env` with your own _web_, _angular_, _laravel_, and _db_ folders.
+  - Use `docker-custom.env` to specify your _web_, _angular_, _laravel_, and _db_ folders;
+    change exposed ports using `ANGULAR_DEV_SERVER_PORT_RANGE`, `NGINX_SECURE_PORT`, and `PHPMYADMIN_PORT`;
+    modify versions of Angular and PHP.
   - Use `docker-php.env` to set `APP_ENV` for your laravel app.
   - Write a replacement `dev-server.conf` to map apps to custom `ng serve` commands.
   - Add support for browscap by copying an _.ini_ file to `~/slidewsl/php/conf`.
@@ -271,7 +273,31 @@ the WSL2 distro assigns the _WSL2 gateway IP address_ to a variable.
 
 - The output from WSL2 provisioning can be viewed with `sudo less /root/provision.log`.
 
-- You could [export](https://learn.microsoft.com/en-us/windows/wsl/basic-commands#export-a-distribution) your WSL2 distro for repeat installs.
+- WSL Export/Import
+
+  - You could [export](https://learn.microsoft.com/en-us/windows/wsl/basic-commands#export-a-distribution) and import your WSL2 distro for repeat installs.
+
+  - Advanced: This could also be used to run multiple SlideWSL environments
+    at once! But, be very careful not to mount the same disk image
+    concurrently. Hint: Different locations should be specified in
+    `/etc/disk-image.conf`. The systemd service is `disk-image`.
+
+  - Sample DOS commands for export/import:
+
+    ```dosbatch
+    set wsl_path=%userprofile%\Desktop\wsl
+    set origin_distro=OracleLinux_8_7
+    set second_distro=OracleLinux_8_7_Legacy
+    mkdir %wsl_path% 2>nul
+    cd %wsl_path%
+    mkdir images 2>nul
+    mkdir instances 2>nul
+    wsl --export %origin_distro%                           images\slidewsl_wsl_distro.tar
+    wsl -l -v
+    wsl --import %second_distro% instances\%second_distro% images\slidewsl_wsl_distro.tar
+    wsl -l -v
+    echo now run: wsl -d %second_distro%
+    ```
 
 - For LAN access over RDP, adjust firewalls as needed and create a port forward for Windows
 using commands like:

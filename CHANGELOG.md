@@ -1,6 +1,21 @@
 
 ---
 
+**04/07/2024**
+
+- Enable WSL interop [^1]
+
+[^1]: With Intellij launched from Windows using Git over WSL, an
+interactive rebase tries to run `jbr/bin/java.exe` via `mnt/c`
+for a Java class called `git4idea.editor.GitRebaseEditorApp`.
+Without interop, the error looks like:
+`UtilAcceptVsock:250: accept4 failed 110 There was a problem with the editor`.
+Related: [8677](https://github.com/microsoft/WSL/issues/8677).
+
+**04/06/2024**
+
+- Make exposed ports configurable
+
 **04/02/2024**
 
 - Move php and angular version info to env
