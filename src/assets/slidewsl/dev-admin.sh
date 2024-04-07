@@ -39,6 +39,8 @@ usage() {
     <WXX>Make angular starter   <CXX>docker compose run --rm angular starter <YXX><app>
     <WXX>Make laravel starter   <CXX>docker compose run --rm php starter
     <WXX>Check keydb cluster    <CXX>docker compose exec -it keydb-node1 keydb-cli cluster info
+    <WXX>Show angular version   <CXX>docker compose run --rm --entrypoint "bash -c" angular "ng version"
+    <WXX>Show php version       <CXX>docker compose run --rm --entrypoint "bash -c" php "php -v"
     <WXX>Interactive terminal   <CXX>docker compose exec -it -u root <YXX><service><CXX> bash
     <WXX> ⤷ then, for example:  <CXX>apt update; apt install -y <YXX>iputils-ping iproute2 net-tools telnet vim less
 
