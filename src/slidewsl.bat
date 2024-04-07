@@ -96,7 +96,7 @@ if errorlevel 1 (
 wsl --set-default %distro%
 wsl -u root -e sh -c "echo -e [user]\\ndefault=%username% >/etc/wsl.conf"
 wsl -u root -e sh -c "echo -e [boot]\\nsystemd=true >>/etc/wsl.conf"
-wsl -u root -e sh -c "echo -e [interop]\\nenabled=false\\nappendWindowsPath=false >>/etc/wsl.conf"
+wsl -u root -e sh -c "echo -e [interop]\\nenabled=true\\nappendWindowsPath=false >>/etc/wsl.conf"
 wsl -u root -e sh -c "dnf install -y dos2unix"
 echo wsl shutting down
 wsl --shutdown
