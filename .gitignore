@@ -94,4 +94,5 @@ fabric.properties
 dist/*
 !dist/getslidewsl.bat
 local/*
-!local/sync_example.sh
+!local/example_sync.sh
+!local/example_docker-custom.env
