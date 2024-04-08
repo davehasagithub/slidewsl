@@ -5,7 +5,7 @@
 
 - Enable WSL interop [^1]
 
-[^1]: With Intellij launched from Windows using Git over WSL, an
+[^1]: With IntelliJ launched from Windows using Git over WSL, an
 interactive rebase tries to run `jbr/bin/java.exe` via `mnt/c`
 for a Java class called `git4idea.editor.GitRebaseEditorApp`.
 Without interop, the error looks like:
