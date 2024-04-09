@@ -7,6 +7,6 @@ fi
 
 cd "/laravel" || { echo unable to use composer folder; exit 1; }
 
-if composer install; then
+if composer install --no-interaction --optimize-autoloader; then
   exec "$@"
 fi
