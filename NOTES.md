@@ -185,7 +185,7 @@ Installation creates a sparse virtual hard disk image (using qemu-img
   It's intended to be used for project and database files.
   The disk image can be disconnected in order to rebuild the underlying
   WSL2 host; it can then be seamlessly reattached without loss of data
-  or configuration (such as local changes, branches and shelved items).
+  or configuration (such as local changes, branches, and shelved items).
 - The image file is created at `%userprofile%\slidewsl.img`
   and mounted at `/mnt/slidewsl`.
   It's set to grow to a max size of 20G.
