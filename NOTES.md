@@ -188,14 +188,15 @@ Installation creates a sparse virtual hard disk image (using qemu-img
   or configuration (such as local changes, branches, and shelved items).
 - The image file is created at `%userprofile%\slidewsl.img`
   and mounted at `/mnt/slidewsl`.
-  It's set to grow to a max size of 20G.
+  It's set to grow to a max size of 20G (currently hard-coded in `disk-image.sh`).
+- The `.angular` folder can quickly chew up lots of space. Either disable cli caching or purge this folder periodically.
 - Symlinks (such as from $HOME to /mnt) are possible, but currently not advised.
 - The mount is controlled by the `disk-image` systemd service.
 - When unmounting or rebuilding WSL:
-  - Be sure to stop IntelliJ, becauses:
+  - Be sure to stop IntelliJ, because:
     - It will attempt to create files under the mount folder when the image isn't mounted.
     - It can also create files as root before the default user is set, thereby causing user provisioning to fail.
-  - Bring down docker containers or their processes might be killed.
+  - Bring down docker containers, or their processes might be killed.
 - It's unclear if systemd shuts down gracefully when Windows shuts down or reboots:
   [8939](https://github.com/microsoft/WSL/discussions/11225),
   [11225](https://github.com/microsoft/WSL/issues/8939).
@@ -205,6 +206,28 @@ Additional Ideas:
   things up after rebuilding WSL2.
 - Similarly, another is to set `HISTFILE` to store `.bash_history` in the disk image.
 
+To increase the size of an existing disk image, use commands like:
+  ```bash
+  # Shut everything down
+  source /etc/disk-image.conf
+  echo image: $IMG_LOCATION
+  docker compose --profile "*" down -v
+  df -h /mnt/slidewsl | grep /dev/nbd0
+  sudo systemctl stop disk-image
+  sudo qemu-img info $IMG_LOCATION
+  # Back up the image file now before continuing
+  # Resize the image file
+  sudo qemu-img resize $IMG_LOCATION +10G # specify increase
+  sudo qemu-nbd --connect=/dev/nbd0 "$IMG_LOCATION"
+  sudo e2fsck -f /dev/nbd0
+  sudo resize2fs /dev/nbd0
+  sudo e2fsck -f /dev/nbd0
+  lsblk -l /dev/nbd0
+  sudo qemu-nbd --disconnect /dev/nbd0
+  sudo qemu-img info $IMG_LOCATION
+  sudo systemctl start disk-image
+  df -h /mnt/slidewsl
+  ```
 
 ### YAML Q&A
 
