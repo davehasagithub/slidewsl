@@ -8,6 +8,6 @@ case "$1" in
     create-starter-app.sh "${@:2}"
     ;;
   *)
-    echo unknown action
+    exec "$@"
     ;;
 esac

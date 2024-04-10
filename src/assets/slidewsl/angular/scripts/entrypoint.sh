@@ -12,6 +12,6 @@ case "$1" in
     prepare-node-modules.sh && build.sh "${@:2}"
     ;;
   *)
-    echo unknown action
+    exec "$@"
     ;;
 esac
