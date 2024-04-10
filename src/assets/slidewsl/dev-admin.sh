@@ -33,14 +33,15 @@ usage() {
     <GBX>See what's running     <CLR><CXX>docker compose ps
     <GBX>Stop all services      <CLR><CXX>docker compose --profile "*" down -v
 
-    <WXX>Tail a laravel log     <CXX>docker compose exec php-fpm tail -f /laravel/storage/logs/laravel_line-<YXX>YYYY<CXX>-<YXX>MM<CXX>-<YXX>DD<CXX>.log
+    <WXX>Tail a laravel log     <CXX>docker compose exec php-fpm tail -f storage/logs/laravel.log
     <WXX>Update node_modules    <CXX>docker compose run --rm angular node_modules
     <WXX>Update composer        <CXX>docker compose run --rm php composer
     <WXX>Make angular starter   <CXX>docker compose run --rm angular starter <YXX><app>
     <WXX>Make laravel starter   <CXX>docker compose run --rm php starter
     <WXX>Check keydb cluster    <CXX>docker compose exec -it keydb-node1 keydb-cli cluster info
-    <WXX>Show angular version   <CXX>docker compose run --rm --entrypoint "bash -c" angular "ng version"
-    <WXX>Show php version       <CXX>docker compose run --rm --entrypoint "bash -c" php "php -v"
+    <WXX>Show angular version   <CXX>docker compose run --rm angular ng version
+    <WXX>Run angular tests      <CXX>docker compose run --rm angular ng test <YXX><app><CXX> --watch=false
+    <WXX>Show php version       <CXX>docker compose run --rm php php -v
     <WXX>Interactive terminal   <CXX>docker compose exec -it -u root <YXX><service><CXX> bash
     <WXX> ⤷ then, for example:  <CXX>apt update; apt install -y <YXX>iputils-ping iproute2 net-tools telnet vim less
 
