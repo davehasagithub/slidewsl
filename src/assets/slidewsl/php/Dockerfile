@@ -46,6 +46,8 @@ RUN wget -nv https://raw.githubusercontent.com/composer/getcomposer.org/${COMPOS
 
 ENV PATH="$PATH:/usr/local/bin/php-scripts/"
 
+WORKDIR /laravel
+
 USER php
 ENTRYPOINT ["fixuid", "entrypoint.sh"]
 

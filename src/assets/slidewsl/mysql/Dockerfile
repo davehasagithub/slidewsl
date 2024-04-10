@@ -8,6 +8,8 @@ RUN add-fixuid.sh mysql mysql \
 
 ENV PATH="$PATH:/usr/local/bin/mysql-scripts/"
 
+WORKDIR /var/lib/mysql
+
 USER mysql
 
 ENTRYPOINT ["fixuid", "fix-perms.sh", "/docker-entrypoint.sh"]
