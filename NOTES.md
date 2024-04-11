@@ -9,7 +9,7 @@
     - [Customizations](#customizations)
     - [Virtual disk image](#virtual-disk-image)
     - [YAML Q&A](#yaml-qa)
-    - [IntelliJ](#intellij)
+    - [IntelliJ on Windows](#intellij-on-windows)
       - [PHP](#php)
       - [Debugging](#debugging)
     - [Laravel](#laravel)
