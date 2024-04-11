@@ -206,7 +206,7 @@ Additional Ideas:
   things up after rebuilding WSL2.
 - Similarly, another is to set `HISTFILE` to store `.bash_history` in the disk image.
 
-To increase the size of an existing disk image, use commands like:
+To increase the size of an existing disk image:
   ```bash
   # Shut everything down
   source /etc/disk-image.conf
@@ -244,9 +244,10 @@ To increase the size of an existing disk image, use commands like:
   created and writable.
 
 
-### IntelliJ
+### IntelliJ on Windows
 
-Open your project using: `\\wsl$\OracleLinux_8_7\mnt\slidewsl\<username>\src`.
+If launching IntelliJ from Windows (rather than using XFCE or WSLg), open your project using:
+`\\wsl$\OracleLinux_8_7\mnt\slidewsl\<username>\src`.
 
 #### PHP
 
