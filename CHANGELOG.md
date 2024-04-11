@@ -1,9 +1,11 @@
 
 ---
 
-**04/07/2024**
+**03/27/2024 - 04/07/2024**
 
 - Enable WSL interop [^1]
+- Use vars for exposed ports, php, angular version numbers
+- Add sample sync.sh script and sample custom env file
 
 [^1]: With IntelliJ launched from Windows using Git over WSL, an
 interactive rebase tries to run `jbr/bin/java.exe` via `mnt/c`
@@ -11,22 +13,6 @@ for a Java class called `git4idea.editor.GitRebaseEditorApp`.
 Without interop, the error looks like:
 `UtilAcceptVsock:250: accept4 failed 110 There was a problem with the editor`.
 Related: [8677](https://github.com/microsoft/WSL/issues/8677).
-
-**04/06/2024**
-
-- Make exposed ports configurable
-
-**04/02/2024**
-
-- Move php and angular version info to env
-
-**03/28/2024**
-
-- Add sample sync script, fix password issue, use snake_case variable names
-
-**03/27/2024**
-
-- Rename repo files for clarity, remove add-host.sh
 
 **03/25/2024**
 
