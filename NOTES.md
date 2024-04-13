@@ -9,10 +9,11 @@
     - [Customizations](#customizations)
     - [Virtual disk image](#virtual-disk-image)
     - [YAML Q&A](#yaml-qa)
-    - [IntelliJ on Windows](#intellij-on-windows)
-      - [PHP](#php)
+    - [IntelliJ](#intellij)
+      - [Options](#options)
+      - [Settings](#settings)
       - [Debugging](#debugging)
-    - [Laravel](#laravel)
+      - [Laravel](#laravel)
     - [Miscellaneous](#miscellaneous)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -134,38 +135,46 @@ Publishing complete.
 
 ### Development environment
 
+Type `dev` (an alias for `~/slidewsl/dev-admin.sh`) to see a list of commands.
+
+Currently, this entails running docker compose commands directly as it is the most
+flexible and educational. But, the dev command itself might be beefed up to wrap
+some of the more common tasks. Currently, for example, there are commands like
+`dev list` and `dev reset`.
+
 <img alt="screenshot" src="./devhelp.png" width="500" />
 
-Type `dev` (an alias for `~/slidewsl/dev-admin.sh`) to see a list of commands.
-More commands might be added later to simplify administration (such as `dev list`).
-
-
 ### Graphical interface
-
-<img alt="screenshot" src="./slidewsl.png" width="500" />
 
 A lightweight XFCE desktop is accessible by connecting to _localhost_ from
 a remote desktop client such as Microsoft Remote Desktop or FreeRDP. You won't
 need an X11 server (such as VcXsrv or Xming) running on the Windows host.
 This comes with JetBrains Toolbox, plus Firefox and Chromium.
+These can also be executed from the terminal using WSLg (be sure to log out of XFCE first).
 
+<img alt="screenshot" src="./slidewsl.png" width="500" />
 
 
 ### Customizations
 
-Preface: During installation, the Docker assets found in `src/assets/slidewsl` will be copied to `~/slidewsl`.
-More specifically, they are expanded from the encoded chunks in `getslidewsl.bat`.
+In order to give the developer full control, this project aims to both provision the WSL2 distro on-demand, and to build all docker images locally.
+Because of this, the following ideas are possible but not pursued:
+- The WSL2 distro could be exported and quickly re-imported (see instructions below).
+- The docker build cache could be stored in the virtual disk image to persist across distro rebuilds (also below).
+- Docker images could be pulled from a registry.
 
-If you're interested in making customizations, here is one approach:
+To take advantage of customization capabilities:
 
 - Clone this repo to your Windows host (i.e., safely outside of the WSL2 distro).
 - Place `sync.sh` in your repo's `local` folder. You'll find an example sync script in the local folder.
   - During a fresh install of SlideWSL, pass the location of your script: `getslidewsl myusr mypswd ..\local\sync.sh`
   - If you forget, you can start using after installation by copying your script into place,
     for example: `cp /mnt/c/users/dave/Desktop/git/slidewsl/local/sync.sh ~/slidewsl`.
-- Run `dev sync` in WSL2. If found, it copies `~/slidewsl/sync.sh` to `/tmp` for execution.
-  On return, if the timestamp of `~/slidewsl/sync.sh` changed, it runs again with the updated version.
-- Here are some ways to use `sync.sh`:
+- Run `dev sync` in WSL2 whenever you have changes to deploy.
+  - If found, it copies `~/slidewsl/sync.sh` to `/tmp` for execution.
+     And, on return, if the timestamp of `~/slidewsl/sync.sh` changed, it runs again with the updated version.
+- The `sync.sh` script can be used to, for example, pick up changes to Dockerfiles, .env files, container scripts, and service configs.
+  It might include the following:
   - `rsync` your `src/assets/slidewsl` folder to `~/slidewsl`.
   - Use `docker-custom.env` to specify your _web_, _angular_, _laravel_, and _db_ folders;
     change exposed ports using `ANGULAR_DEV_SERVER_PORT_RANGE`, `NGINX_SECURE_PORT`, and `PHPMYADMIN_PORT`;
@@ -174,7 +183,9 @@ If you're interested in making customizations, here is one approach:
   - Write a replacement `dev-server.conf` to map apps to custom `ng serve` commands.
   - Add support for browscap by copying an _.ini_ file to `~/slidewsl/php/conf`.
   - Use `docker-phpmyadmin.env` to define `PMA_USER` and `PMA_PASSWORD`.
-  - Run `dos2unix` if necessary.
+  - Run `dos2unix` or other tools.
+- If instead you'd like to customize the `getslidewsl.bat` batch file itself (perhaps to build an enhanced WSL2 distro),
+    it's easiest to build it from a second WSL2 distro, for example: `wsl -d ubuntu /mnt/c/users/dave/Desktop/git/slidewsl/build.sh`.
 
 
 
@@ -192,7 +203,7 @@ Installation creates a sparse virtual hard disk image (using qemu-img
 - The `.angular` folder can quickly chew up lots of space. Either disable cli caching or purge this folder periodically.
 - Symlinks (such as from $HOME to /mnt) are possible, but currently not advised.
 - The mount is controlled by the `disk-image` systemd service.
-- When unmounting or rebuilding WSL:
+- When unmounting or rebuilding WSL2:
   - Be sure to stop IntelliJ, because:
     - It will attempt to create files under the mount folder when the image isn't mounted.
     - It can also create files as root before the default user is set, thereby causing user provisioning to fail.
@@ -244,43 +255,69 @@ To increase the size of an existing disk image:
   created and writable.
 
 
-### IntelliJ on Windows
+### IntelliJ
 
-If launching IntelliJ from Windows (rather than using XFCE or WSLg), open your project using:
-`\\wsl$\OracleLinux_8_7\mnt\slidewsl\<username>\src`.
+#### Options
 
-#### PHP
+IntelliJ can be launched multiple ways.
+Choices 1 and 2 are recommended as they allow for the best performance, and you can easily
+switch between them to pick up where you left off (you must log out of XFCE to use WSLg).
 
-  - Use the PHP Docker plugin in IntelliJ to work remotely with the PHP CLI from the _slidewsl-php-fpm_ Docker container.
-  - Enable PHP CS Fixer using the same container and the path: `/tools/vendor/friendsofphp/php-cs-fixer/php-cs-fixer`
+1. **From Linux Over WSLg**: This would be the clear winner if not for the added window frame that comes with WSLg
+   (see [530](https://github.com/microsoft/wslg/issues/530), [166](https://github.com/microsoft/wslg/issues/166)).
+   To install JetBrains Toolbox, run `/opt/jetbrains-toolbox-2.2.1.19765/jetbrains-toolbox`.
+   Afterward, use `~/.local/share/JetBrains/Toolbox/bin/jetbrains-toolbox >/dev/null 2>&1 &`.
+   Tip: Exit using the Quit menu option instead of clicking X.
+   Open your project under `/mnt/slidewsl`, such as `/mnt/slidewsl/dave/src`.
+
+2. **From XFCE using RDP**: The XFCE option is nice if you want to develop while fully immersed in an isolated desktop environment that
+   includes XFCE bells and whistles. Simply run your favorite remote desktop tool and connect to `localhost:3390`.
+   There, you will find a JetBrains Toolbox shortcut on the desktop to do the IntelliJ install.
+   Unlike with option 1, you can get a true full screen IDE (alt-F11) or scale the entire desktop based on the size of the RDP window.
+   But, you may run into some issues. For example, if you use ctrl-F3 for something in the IDE, it might be intercepted by XFCE and the
+   workspace switcher (to jump to workspace #3). A fix is to remove the `workspace_3_key` entry in
+   `~/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml`.
+
+3. **From JetBrains Gateway**: This has lots of issues. JetBrains seems to be working to make improvements here, so try it for yourself.
+
+4. **From Windows**: This works OK. In fact, you can run 3 alongside 1 or 2. But, unfortunately, it will be slower for
+   things like indexing dependencies or linting TypeScript files. Open your project using `\\wsl$\OracleLinux_8_7\mnt\slidewsl`.
+
+#### Settings
+
+- `File | Settings | Plugins`
+  - Install PHP, PHP Docker, PHP Remote Interpreter, GitToolBox, Blade
+- `File | Settings | Languages & Frameworks | PHP`
+  - Set the language level
+  - Set CLI interpreter to Remote, Docker, `slidewsl-php:latest` (if it's not there, run `docker compose build php`)
+- `File | Settings | Languages & Frameworks | Node.js`
+  - Set Node interpreter to Remote, Docker, `slidewsl-angular:latest` (if not there, run `docker compose build angular`)
+- `File | Settings | Languages & Frameworks | PHP | Quality Tools | PHP CS Fixer`
+  - Use `slidewsl-php:latest` with path `/tools/vendor/friendsofphp/php-cs-fixer/php-cs-fixer`
+- `File | Settings | Languages & Frameworks | PHP | Servers`
+  - Map the value of `SLIDEWSL_LARAVEL_ROOT_IN_WSL` to `/laravel`.
+
 
 #### Debugging
 
-  - In order to debug using IntelliJ with WSL2 and Xdebug,
-the WSL2 distro assigns the _WSL2 gateway IP address_ to a variable.
-  - This variable is used in php.ini to allow the php-fpm container to connect to the IDE:
-`xdebug.client_host=${WSL2_GATEWAY}`.
+  If using options 1 or 2 as listed above, Xdebug should connect to IntelliJ without issue.
+  If using option 4, Xdebug will use the _WSL2 gateway IP address_ as specified in php.ini:
+    `xdebug.client_host=${WSL2_GATEWAY}`. You may need to update the Windows Defender firewall
+    as described in [4139](https://github.com/microsoft/WSL/issues/4139), [11139](https://github.com/microsoft/WSL/issues/11139), and from [JetBrains](https://www.jetbrains.com/help/idea/how-to-use-wsl-development-environment-in-product.html#debugging_system_settings).
+    Run these commands from an elevated PowerShell whenever the WSL2 distro is recreated or when upgrading IntelliJ:
 
-  - You may run into the following issues:
-  [4139](https://github.com/microsoft/WSL/issues/4139),
-  [11139](https://github.com/microsoft/WSL/issues/11139).
+  ```powershell
+  New-NetFirewallRule -DisplayName "WSL" -Direction Inbound -InterfaceAlias "vEthernet (WSL)" -Action Allow
+  Get-NetFirewallProfile -Name Public | Get-NetFirewallRule | where DisplayName -ILike "IntelliJ IDEA*" | Disable-NetFirewallRule
+  ```
 
-  - More details from [JetBrains](https://www.jetbrains.com/help/idea/how-to-use-wsl-development-environment-in-product.html#debugging_system_settings).
+  To debug Angular, create a JavaScript Debug Run/Debug configuration in IntelliJ with your URL.
+  Set the browser path if necessary, for example: `/usr/bin/chromium-browser`.
 
-  - Your experience might be different if you're using WSL2 _mirrored_ networking.
-
-  - The workaround involves updates to the Windows Defender Firewall:
-
-    ```powershell
-    # From elevated PowerShell
-    New-NetFirewallRule -DisplayName "WSL" -Direction Inbound -InterfaceAlias "vEthernet (WSL)" -Action Allow
-    Get-NetFirewallProfile -Name Public | Get-NetFirewallRule | where DisplayName -ILike "IntelliJ IDEA*" | Disable-NetFirewallRule
-    ```
-
-### Laravel
+#### Laravel
 
   - Browser requests to `/api` are routed to Laravel's `public/index.php`.
-  - Update Angular's `proxy.conf.json` as shown here:
+  - Ensure your project's `proxy.conf.json` looks similar to:
     ```json
     {
       "/api/": {
@@ -290,14 +327,12 @@ the WSL2 distro assigns the _WSL2 gateway IP address_ to a variable.
       }
     }
     ```
-  - For debugging in IntelliJ, map the value of `SLIDEWSL_LARAVEL_ROOT_IN_WSL` to `/laravel`
-    under `Settings | Languages & Frameworks | PHP | Servers`.
 
 ### Miscellaneous
 
 - The output from WSL2 provisioning can be viewed with `sudo less /root/provision.log`.
 
-- WSL Export/Import
+- WSL2 Export/Import
 
   - You could [export](https://learn.microsoft.com/en-us/windows/wsl/basic-commands#export-a-distribution) and import your WSL2 distro for repeat installs.
 
@@ -333,7 +368,7 @@ using commands like:
   netsh interface portproxy delete v4tov4 listenport=3390 listenaddress=0.0.0.0
   ```
 
-- You may want to copy your .ssh folder into the WSL distro, such as:
+- You may want to copy your .ssh folder into the WSL2 distro, such as:
 
   ```bash
   cp /mnt/c/Users/<name>/.ssh/id_* ~/.ssh
