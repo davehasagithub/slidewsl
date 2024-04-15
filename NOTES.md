@@ -2,25 +2,22 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [Notes](#notes)
-    - [Basic walkthrough](#basic-walkthrough)
-    - [Development environment](#development-environment)
-    - [Graphical interface](#graphical-interface)
-    - [Customizations](#customizations)
-    - [Virtual disk image](#virtual-disk-image)
-    - [YAML Q&A](#yaml-qa)
-    - [IntelliJ](#intellij)
-      - [Options](#options)
-      - [Settings](#settings)
-      - [Debugging](#debugging)
-      - [Laravel](#laravel)
-    - [Miscellaneous](#miscellaneous)
+- [Basic walkthrough](#basic-walkthrough)
+- [Development environment](#development-environment)
+- [Graphical interface](#graphical-interface)
+- [Customizations](#customizations)
+- [Virtual disk image](#virtual-disk-image)
+- [YAML Q&A](#yaml-qa)
+- [IntelliJ](#intellij)
+  - [Options](#options)
+  - [Settings](#settings)
+  - [Debugging](#debugging)
+  - [Laravel](#laravel)
+- [Miscellaneous](#miscellaneous)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 <!-- doctoc NOTES.md --github -->
-
-# Notes
 
 
 ### Basic walkthrough
@@ -278,12 +275,14 @@ switch between them to pick up where you left off (you must log out of XFCE to u
    workspace switcher (to jump to workspace #3). A fix is to remove the `workspace_3_key` entry in
    `~/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml`.
 
-3. **From JetBrains Gateway**: This has lots of issues. JetBrains seems to be working to make improvements here, so try it for yourself.
+3. **From JetBrains Gateway**: (ie, Remote Development) Lots of issues, but JetBrains is improving this.
 
 4. **From Windows**: This works OK. In fact, you can run 3 alongside 1 or 2. But, unfortunately, it will be slower for
    things like indexing dependencies or linting TypeScript files. Open your project using `\\wsl$\OracleLinux_8_7\mnt\slidewsl`.
 
 #### Settings
+
+Required settings:
 
 - `File | Settings | Plugins`
   - Install PHP, PHP Docker, PHP Remote Interpreter, GitToolBox, Blade
@@ -296,6 +295,37 @@ switch between them to pick up where you left off (you must log out of XFCE to u
   - Use `slidewsl-php:latest` with path `/tools/vendor/friendsofphp/php-cs-fixer/php-cs-fixer`
 - `File | Settings | Languages & Frameworks | PHP | Servers`
   - Map the value of `SLIDEWSL_LARAVEL_ROOT_IN_WSL` to `/laravel`.
+
+<details>
+<summary>Optional settings:</summary>
+
+(These are other kinds of settings you may want to review. Obviously, personalize to your needs!) 
+
+- `File | Settings | Appearance & Behavior | New UI`
+  - Disable new UI
+- `File | Settings | Plugins`
+- `File | Settings | Appearance & Behavior | Appearance`
+  - Install and use Dark Purple theme
+- `File | Settings | Version Control | GitToolBox`
+  - Disable editor inline blame
+- `File | Settings | Keymap`
+  - "Switcher", add Alt+D
+  - "Close tab", add Ctrl+Alt+W
+  - "Show in explorer" ("file manager"), Ctrl+Alt+Shift+E
+  - "Show history" (version control systems), Alt+Shift+Y
+  - "Next occurrence of the word at caret", Ctrl+F3
+  - "Move to next occurrence", Ctrl+K
+  - "Move to previous occurrence", Ctrl+Shift+K
+- `File | Settings | Editor | General | Smart Keys`
+  - Use CamelHumps words [check]
+  - Honor CamelHumps words settings [uncheck]
+- `Editor | Code Style | TypeScript | Punctuation`
+  - Use single quotes
+- `File | Settings | Version Control | Commit`
+  - Use non-modal commit interface [uncheck]
+- `File | Settings | Editor | General`
+  - Scroll, move caret, minimize editor scrolling
+</details>
 
 
 #### Debugging
