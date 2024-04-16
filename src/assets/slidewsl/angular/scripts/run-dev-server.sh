@@ -7,7 +7,7 @@ while IFS='=' read -r key value; do
   if [[ -n $key ]]; then
     app_configs["$key"]="$value"
   fi
-done < /usr/local/etc/angular/dev-server.conf
+done < /usr/local/etc/angular/"${CONF_FILENAME:-dev-server.conf}"
 
 if [ -z "$1" ]; then
   echo "no apps specified"

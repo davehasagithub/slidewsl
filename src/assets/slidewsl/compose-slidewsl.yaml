@@ -25,7 +25,7 @@ services:
     command: "fix-folders.sh"
     env_file:
       - docker-base.env
-      - path: docker-custom.env
+      - path: ${DOCKER_CUSTOM_ENV:-docker-custom.env}
         required: false
     volumes:
       - ./_shared:/usr/local/bin/
@@ -54,7 +54,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     env_file:
       - docker-base.env
-      - path: docker-custom.env
+      - path: ${DOCKER_CUSTOM_ENV:-docker-custom.env}
         required: false
       - path: docker-angular.env
         required: false
@@ -64,13 +64,14 @@ services:
       - angular
 
   angular_dev_server:
-    container_name: angular_dev_server
+    container_name: ${COMPOSE_PROJECT_NAME}_angular_dev_server
     extends:
       service: angular
     build:
       target: dev_server
     environment:
       APPS: ${APPS:-app-not-specified}
+      CONF_FILENAME: ${CONF_FILENAME:-dev-server.conf}
     networks:
       - angular_dev_server
     depends_on:
@@ -82,7 +83,7 @@ services:
   # --------------------------------------------------------------------------------
 
   nginx:
-    container_name: nginx
+    container_name: ${COMPOSE_PROJECT_NAME}_nginx
     build:
       context: nginx
       additional_contexts:
@@ -102,7 +103,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     env_file:
       - docker-base.env
-      - path: docker-custom.env
+      - path: ${DOCKER_CUSTOM_ENV:-docker-custom.env}
         required: false
       - path: docker-nginx.env
         required: false
@@ -138,7 +139,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     env_file:
       - docker-base.env
-      - path: docker-custom.env
+      - path: ${DOCKER_CUSTOM_ENV:-docker-custom.env}
         required: false
       - path: docker-php.env
         required: false
@@ -148,7 +149,7 @@ services:
       - php
 
   php-fpm:
-    container_name: php-fpm
+    container_name: ${COMPOSE_PROJECT_NAME}_php-fpm
     extends:
       service: php
     build:
@@ -172,7 +173,7 @@ services:
   # --------------------------------------------------------------------------------
 
   keydb-node1:
-    container_name: keydb-node1
+    container_name: ${COMPOSE_PROJECT_NAME}_keydb-node1
     hostname: keydb-node1
     build:
       context: keydb
@@ -187,13 +188,13 @@ services:
       - ./keydb/keydb-node1:/etc/keydb
     env_file:
       - docker-base.env
-      - path: docker-custom.env
+      - path: ${DOCKER_CUSTOM_ENV:-docker-custom.env}
         required: false
       - path: docker-keydb.env
         required: false
 
   keydb-node2:
-    container_name: keydb-node2
+    container_name: ${COMPOSE_PROJECT_NAME}_keydb-node2
     hostname: keydb-node2
     extends:
       service: keydb-node1
@@ -203,7 +204,7 @@ services:
       - ./keydb/keydb-node2:/etc/keydb
 
   keydb-node3:
-    container_name: keydb-node3
+    container_name: ${COMPOSE_PROJECT_NAME}_keydb-node3
     hostname: keydb-node3
     extends:
       service: keydb-node1
@@ -217,7 +218,7 @@ services:
   # --------------------------------------------------------------------------------
 
   mysql:
-    container_name: mysql
+    container_name: ${COMPOSE_PROJECT_NAME}_mysql
     build:
       context: mysql
       additional_contexts:
@@ -236,13 +237,13 @@ services:
       - init
     env_file:
       - docker-base.env
-      - path: docker-custom.env
+      - path: ${DOCKER_CUSTOM_ENV:-docker-custom.env}
         required: false
       - path: docker-mysql.env
         required: false
 
   phpmyadmin:
-    container_name: phpmyadmin
+    container_name: ${COMPOSE_PROJECT_NAME}_phpmyadmin
     build:
       context: phpmyadmin
       additional_contexts:
@@ -259,7 +260,7 @@ services:
       - "0.0.0.0:${PHPMYADMIN_PORT:-8080}:80"
     env_file:
       - docker-base.env
-      - path: docker-custom.env
+      - path: ${DOCKER_CUSTOM_ENV:-docker-custom.env}
         required: false
       - path: docker-phpmyadmin.env
         required: false
