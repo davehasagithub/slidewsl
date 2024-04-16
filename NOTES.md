@@ -134,7 +134,7 @@ Publishing complete.
 
 Type `dev` (an alias for `~/slidewsl/dev-admin.sh`) to see a list of commands.
 
-Currently, this entails running docker compose commands directly as it is the most
+Currently, this entails running Docker Compose commands directly as it is the most
 flexible and educational. But, the dev command itself might be beefed up to wrap
 some of the more common tasks. Currently, for example, there are commands like
 `dev list` and `dev reset`.
@@ -154,12 +154,7 @@ These can also be executed from the terminal using WSLg (be sure to log out of X
 
 ### Customizations
 
-In order to give the developer full control, this project aims to both provision the WSL2 distro on-demand, and to build all docker images locally.
-Because of this, the following ideas are possible but not pursued:
-- The WSL2 distro could be exported and quickly re-imported (see instructions below).
-- The docker build cache could be stored in the virtual disk image to persist across distro rebuilds (also below).
-- Docker images could be pulled from a registry.
-
+In order to give the developer full control, this project aims to both provision the WSL2 distro on-demand, and to build all Docker images locally.
 To take advantage of customization capabilities:
 
 - Clone this repo to your Windows host (i.e., safely outside of the WSL2 distro).
@@ -181,9 +176,17 @@ To take advantage of customization capabilities:
   - Add support for browscap by copying an _.ini_ file to `~/slidewsl/php/conf`.
   - Use `docker-phpmyadmin.env` to define `PMA_USER` and `PMA_PASSWORD`.
   - Run `dos2unix` or other tools.
-- If instead you'd like to customize the `getslidewsl.bat` batch file itself (perhaps to build an enhanced WSL2 distro),
-    it's easiest to build it from a second WSL2 distro, for example: `wsl -d ubuntu /mnt/c/users/dave/Desktop/git/slidewsl/build.sh`.
-
+- You can also run multiple Compose projects simultaneously using the same YAML file
+with individual configurations that specify different source code, tools, and ports.
+Simply prefix your Docker commands with these variables:
+  - `DOCKER_CUSTOM_ENV`, `COMPOSE_PROJECT_NAME`, and `CONF_FILENAME`
+  - For example:
+    ```bash
+    DOCKER_CUSTOM_ENV=docker-custom-legacy.env COMPOSE_PROJECT_NAME=slidewsl-legacy docker compose up -d
+    DOCKER_CUSTOM_ENV=docker-custom-legacy.env COMPOSE_PROJECT_NAME=slidewsl-legacy CONF_FILENAME=dev-server-legacy.conf APPS="my-app" docker compose up --force-recreate angular_dev_server -d
+    ```
+- To customize the `getslidewsl.bat` batch file itself (perhaps to build an enhanced WSL2 distro),
+  it's easiest to build it from a second WSL2 distro, for example: `wsl -d ubuntu /mnt/c/users/dave/Desktop/git/slidewsl/build.sh`.
 
 
 ### Virtual disk image
@@ -204,7 +207,7 @@ Installation creates a sparse virtual hard disk image (using qemu-img
   - Be sure to stop IntelliJ, because:
     - It will attempt to create files under the mount folder when the image isn't mounted.
     - It can also create files as root before the default user is set, thereby causing user provisioning to fail.
-  - Bring down docker containers, or their processes might be killed.
+  - Bring down Docker containers, or their processes might be killed.
 - It's unclear if systemd shuts down gracefully when Windows shuts down or reboots:
   [8939](https://github.com/microsoft/WSL/discussions/11225),
   [11225](https://github.com/microsoft/WSL/issues/8939).
@@ -316,6 +319,7 @@ Required settings:
   - "Next occurrence of the word at caret", Ctrl+F3
   - "Move to next occurrence", Ctrl+K
   - "Move to previous occurrence", Ctrl+Shift+K
+  - "Go to declaration and usages" (mouse shortcut), Middle-Click
 - `File | Settings | Editor | General | Smart Keys`
   - Use CamelHumps words [check]
   - Honor CamelHumps words settings [uncheck]
@@ -367,9 +371,10 @@ Required settings:
   - You could [export](https://learn.microsoft.com/en-us/windows/wsl/basic-commands#export-a-distribution) and import your WSL2 distro for repeat installs.
 
   - Advanced: This could also be used to run multiple SlideWSL environments
-    at once! But, be very careful not to mount the same disk image
+    at once (ie: multiple WSL distros). But, be very careful not to mount the same disk image
     concurrently. Hint: Different locations should be specified in
     `/etc/disk-image.conf`. The systemd service is `disk-image`.
+    A better solution is running multiple Compose projects as detailed above.
 
   - Sample DOS commands for export/import:
 
