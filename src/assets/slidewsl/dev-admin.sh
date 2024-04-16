@@ -5,6 +5,8 @@ main() {
 
   if [[ "$OPT" == "sync" ]]; then
     _call sync "$@"
+  elif [[ "$OPT" == "ij-clean" ]]; then
+    _call ij-clean
   elif [[ "$OPT" == "reset" ]]; then
     shift
     _call reset "$@"
@@ -47,6 +49,7 @@ usage() {
 
     <WXX>Run sync.sh script     <CXX>${ALIAS_USED:-$0} sync
     <WXX>See Docker resources   <CXX>${ALIAS_USED:-$0} list <YXX>[stats]
+    <WXX>Rm IJ containers+cache <CXX>${ALIAS_USED:-$0} ij-clean
     <WXX>Reset                  <CXX>${ALIAS_USED:-$0} reset <YXX>[cache]
 
 EOF
@@ -54,9 +57,26 @@ EOF
   return 1
 }
 
+ij-clean() {
+  # delete cache and kill containers
+  read -r -p "It's recommended to shut down IntelliJ first. Ready? [y/N] " response
+  response=${response,,}
+  if [[ "$response" =~ ^(yes|y)$ ]]; then
+    find /mnt/slidewsl/$USER/src -name ".angular" -type d -exec ls -ld {} \; -exec rm -rf {}/cache \;
+    local ids
+    ids=$(docker ps --no-trunc|grep js-language-service|awk '{ print $1 }' ORS=' ')
+    echo "containers: $ids"
+    if [[ "$ids" ]]; then
+      # shellcheck disable=SC2086
+      docker rm -f $ids || true
+    fi
+  fi
+}
+
+# hidden from usage
 stop() {
   local ids
-  ids=$(docker ps -q)
+  ids=$(docker ps -q | awk '{print}' ORS=' ')
   echo "containers: $ids"
   if [[ "$ids" ]]; then
     # shellcheck disable=SC2086
