@@ -267,6 +267,7 @@ switch between them to pick up where you left off (you must log out of XFCE to u
    (see [530](https://github.com/microsoft/wslg/issues/530), [166](https://github.com/microsoft/wslg/issues/166)).
    To install JetBrains Toolbox, run `/opt/jetbrains-toolbox-2.2.1.19765/jetbrains-toolbox`.
    Afterward, use `~/.local/share/JetBrains/Toolbox/bin/jetbrains-toolbox >/dev/null 2>&1 &`.
+   To launch IntelliJ directly, `~/.local/share/JetBrains/Toolbox/apps/intellij-idea-ultimate/bin/idea.sh >/dev/null 2>&1 &`.
    Tip: Exit using the Quit menu option instead of clicking X.
    Open your project under `/mnt/slidewsl`, such as `/mnt/slidewsl/dave/src`.
 
@@ -298,6 +299,8 @@ Required settings:
   - Use `slidewsl-php:latest` with path `/tools/vendor/friendsofphp/php-cs-fixer/php-cs-fixer`
 - `File | Settings | Languages & Frameworks | PHP | Servers`
   - Map the value of `SLIDEWSL_LARAVEL_ROOT_IN_WSL` to `/laravel`.
+- `File | Settings | Languages & Frameworks | TypeScript`
+  - Use types from server
 
 <details>
 <summary>Optional settings:</summary>
@@ -311,15 +314,20 @@ Required settings:
   - Install and use Dark Purple theme
 - `File | Settings | Version Control | GitToolBox`
   - Disable editor inline blame
+- `File | Settings | Editor | Code Style | PHP | Code Generation`
+  - Uncheck "line comment", check "Add a space"
+- `File | Settings | Editor | General | Editor Tabs`
+  - Tab limit: 50 (?)
 - `File | Settings | Keymap`
   - "Switcher", add Alt+D
   - "Close tab", add Ctrl+Alt+W
-  - "Show in explorer" ("file manager"), Ctrl+Alt+Shift+E
+  - "Show in explorer" (file manager), Ctrl+Alt+Shift+E
   - "Show history" (version control systems), Alt+Shift+Y
   - "Next occurrence of the word at caret", Ctrl+F3
   - "Move to next occurrence", Ctrl+K
   - "Move to previous occurrence", Ctrl+Shift+K
   - "Go to declaration and usages" (mouse shortcut), Middle-Click
+  - "Show Source" (main Menu, view), remove Ctrl+Enter
 - `File | Settings | Editor | General | Smart Keys`
   - Use CamelHumps words [check]
   - Honor CamelHumps words settings [uncheck]
