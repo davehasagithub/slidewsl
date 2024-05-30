@@ -20,7 +20,7 @@ for app in $1; do
   else
     echo "(if $app doesn't exist, you might see the error: Unknown arguments)"
     echo "running $config"
-    eval "$config" 2>&1 | sed "s/^/$app | /" &
+    eval "$config" 2>&1 | sed -u "s/^/$app | /" &
     echo "done"
   fi
 done
