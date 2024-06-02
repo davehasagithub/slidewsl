@@ -21,7 +21,10 @@ COPY ./scripts/chromium.sh /usr/local/bin/chromium.sh
 ENV CHROME_BIN="/usr/local/bin/chromium.sh"
 
 RUN --mount=type=cache,target=/root/.npm \
-    npm install -g @angular/cli@${NG_CLI_VERSION}
+    npm install -g @angular/cli@${NG_CLI_VERSION} npm@latest yarn@latest --force
+
+RUN mkdir -p /home/node/.cache/yarn \
+    && chown -R node:node /home/node/.cache/yarn
 
 ENV PATH="$PATH:/usr/local/bin/angular-scripts/"
 

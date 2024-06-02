@@ -8,6 +8,7 @@ networks:
 
 volumes:
   keydb:
+  yarn_cache:
 
 services:
 
@@ -52,6 +53,7 @@ services:
       - ./angular/scripts:/usr/local/bin/angular-scripts/
       - ./angular/conf:/usr/local/etc/angular/
       - /etc/localtime:/etc/localtime:ro
+      - yarn_cache:/home/node/.cache/yarn
     env_file:
       - docker-base.env
       - path: ${DOCKER_CUSTOM_ENV:-docker-custom.env}
