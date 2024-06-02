@@ -20,21 +20,38 @@ map $server_port $angular_port {
 server {
   listen 4200-4210;
 
-  location / {
+  location /api {
     resolver 127.0.0.11; # https://stackoverflow.com/a/22259088
-    proxy_pass http://angular_dev_server:$angular_port;
+    proxy_pass https://nginx:4430;
+    proxy_http_version 1.1;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_max_temp_file_size 0;
+  }
+
+  location / {
+    include /etc/nginx/templates/angular-proxy.conf.include;
+    proxy_read_timeout 1000ms;
+    error_page 504 @handle_504_1;
+  }
+
+  location @handle_504_1 {
+    include /etc/nginx/templates/angular-proxy.conf.include;
+    proxy_read_timeout 3s;
+    error_page 504 @handle_504_2;
+  }
+
+  location @handle_504_2 {
+    include /etc/nginx/templates/angular-proxy.conf.include;
   }
 
   location /ng-cli-ws {
-    resolver 127.0.0.11;
-    proxy_pass http://angular_dev_server:$angular_port;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "Upgrade";
-    proxy_set_header Host $host;
+    include /etc/nginx/templates/angular-proxy.conf.include;
+  }
+
+  location /browser-sync/socket.io {
+    include /etc/nginx/templates/angular-proxy.conf.include;
   }
 }
