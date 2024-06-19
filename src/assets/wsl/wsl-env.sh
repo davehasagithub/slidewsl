@@ -1,5 +1,6 @@
 export DOCKER_BUILDKIT=1
-export COMPOSE_FILE="$HOME/slidewsl/compose.yaml"
+export COMPOSE_FILE="$HOME/slidewsl/compose.local.yaml"
+export COMPOSE_ENV_FILES="$HOME/slidewsl/_env/local.env"
 
 WSL_UID=$(id -u)
 WSL_GID=$(id -g)
