@@ -7,7 +7,8 @@
 - [Graphical interface](#graphical-interface)
 - [Customizations](#customizations)
 - [Virtual disk image](#virtual-disk-image)
-- [YAML Q&A](#yaml-qa)
+- [SlideWSL for Production](#slidewsl-for-production)
+- [Q&A](#qa)
 - [IntelliJ](#intellij)
   - [Options](#options)
   - [Settings](#settings)
@@ -33,14 +34,14 @@
   docker compose run --rm angular starter example \
     && docker compose run --rm php starter \
     && docker compose up -d \
-    && APPS="example" docker compose up --force-recreate angular_dev_server -d \
+    && APPS="example" docker compose up --force-recreate angular-dev-server -d \
     && docker compose logs -f
   ```
   But, if you already have a project in place, you'd skip the _starter_ steps and add a _build_ step like this:
   ```bash
   docker compose up -d \
     && docker compose run --rm angular build my-project \
-    && APPS="my-project" docker compose up --force-recreate angular_dev_server -d \
+    && APPS="my-project" docker compose up --force-recreate angular-dev-server -d \
     && docker compose logs -f
   ```
 - Update the Windows `hosts` file:
@@ -118,8 +119,8 @@ Publishing complete.
 ✔ Container nginx             Started
 
 
-[dave@wsl ~]$ APPS="example" docker compose up --force-recreate angular_dev_server -d
-✔ Container angular_dev_server Started
+[dave@wsl ~]$ APPS="example" docker compose up --force-recreate angular-dev-server -d
+✔ Container angular-dev-server Started
 
 
 [dave@wsl ~]$ docker compose logs -f
@@ -154,7 +155,7 @@ These can also be executed from the terminal using WSLg (be sure to log out of X
 
 ### Customizations
 
-In order to give the developer full control, this project aims to both provision the WSL2 distro on-demand, and to build all Docker images locally.
+In order to give the developer full control, this project aims to both provision the WSL2 distro on-demand, and to build all images locally.
 To take advantage of customization capabilities:
 
 - Clone this repo to your Windows host (i.e., safely outside of the WSL2 distro).
@@ -168,32 +169,32 @@ To take advantage of customization capabilities:
 - The `sync.sh` script can be used to, for example, pick up changes to Dockerfiles, .env files, container scripts, and service configs.
   It might include the following:
   - `rsync` your `src/assets/slidewsl` folder to `~/slidewsl`.
-  - Use `docker-custom.env` to specify your _web_, _angular_, _laravel_, and _db_ folders;
+  - Create a custom `local.env` to specify your _web_, _angular_, _laravel_, and _db_ folders;
     change exposed ports using `ANGULAR_DEV_SERVER_PORT_RANGE`, `NGINX_SECURE_PORT`, and `PHPMYADMIN_PORT`;
     modify versions of Angular and PHP.
-  - Use `docker-php.env` to set `APP_ENV` for your laravel app.
   - Write a replacement `dev-server.conf` to map apps to custom `ng serve` commands.
-  - Add support for browscap by copying an _.ini_ file to `~/slidewsl/php/conf`.
-  - Use `docker-phpmyadmin.env` to define `PMA_USER` and `PMA_PASSWORD`.
+  - Add support for browscap by copying an _.ini_ file to `~/slidewsl/php/etc`.
   - Run `dos2unix` or other tools.
-- You can also run multiple Compose projects simultaneously using the same YAML file
-with individual configurations that specify different source code, tools, and ports.
-Simply prefix your Docker commands with these variables:
-  - `DOCKER_CUSTOM_ENV`, `COMPOSE_PROJECT_NAME`, and `CONF_FILENAME`
+  - Regenerate your Compose YAML files.
+- This is less common, but you can also run multiple Compose projects simultaneously using the same YAML file
+with individual configurations that specify different source code, tools, and ports (perhaps to run a legacy
+stack while migrating). Simply prefix your Docker commands with these variables:
+  - `COMPOSE_ENV_FILES`, `COMPOSE_PROJECT_NAME`, and `CONF_FILENAME`
   - For example:
     ```bash
-    DOCKER_CUSTOM_ENV=docker-custom-legacy.env COMPOSE_PROJECT_NAME=slidewsl-legacy docker compose up -d
-    DOCKER_CUSTOM_ENV=docker-custom-legacy.env COMPOSE_PROJECT_NAME=slidewsl-legacy CONF_FILENAME=dev-server-legacy.conf APPS="my-app" docker compose up --force-recreate angular_dev_server -d
+    COMPOSE_ENV_FILES=$HOME/slidewsl/_env/local-legacy.env COMPOSE_PROJECT_NAME=slidewsl-legacy docker compose up -d --build
+    COMPOSE_ENV_FILES=$HOME/slidewsl/_env/local-legacy.env COMPOSE_PROJECT_NAME=slidewsl-legacy CONF_FILENAME=dev-server-legacy.conf APPS="my-app" docker compose up --force-recreate angular-dev-server -d
     ```
 - To customize the `getslidewsl.bat` batch file itself (perhaps to build an enhanced WSL2 distro),
-  it's easiest to build it from a second WSL2 distro, for example: `wsl -d ubuntu /mnt/c/users/dave/Desktop/git/slidewsl/build.sh`.
+  it's easiest to do that build from a different (non-SlideWSL) WSL2 distro,
+  for example: `wsl -d ubuntu /mnt/c/users/dave/Desktop/git/slidewsl/build.sh`.
 
 
 ### Virtual disk image
 
-Installation creates a sparse virtual hard disk image (using qemu-img
+The installation process creates a sparse virtual hard disk image (using qemu-img
   in the qcow2 format).
-  It's intended to be used for project and database files.
+  It's intended to be used for project and local database files.
   The disk image can be disconnected in order to rebuild the underlying
   WSL2 host; it can then be seamlessly reattached without loss of data
   or configuration (such as local changes, branches, and shelved items).
@@ -203,11 +204,12 @@ Installation creates a sparse virtual hard disk image (using qemu-img
 - The `.angular` folder can quickly chew up lots of space. Either disable cli caching or purge this folder periodically.
 - Symlinks (such as from $HOME to /mnt) are possible, but currently not advised.
 - The mount is controlled by the `disk-image` systemd service.
-- When unmounting or rebuilding WSL2:
-  - Be sure to stop IntelliJ, because:
+- To unmount for backup or rebuild:
+  - Use `sudo systemctl stop disk-image`, then `exit`, and `wsl --shutdown`.
+  - Be sure to stop IntelliJ first, because:
     - It will attempt to create files under the mount folder when the image isn't mounted.
     - It can also create files as root before the default user is set, thereby causing user provisioning to fail.
-  - Bring down Docker containers, or their processes might be killed.
+  - Bring down Docker containers first, or their processes might be killed when unmounting.
 - It's unclear if systemd shuts down gracefully when Windows shuts down or reboots:
   [8939](https://github.com/microsoft/WSL/discussions/11225),
   [11225](https://github.com/microsoft/WSL/issues/8939).
@@ -216,8 +218,12 @@ Additional Ideas:
 - One interesting idea is to point `DOCKER_BUILDKIT_CACHE` at the disk image to speed
   things up after rebuilding WSL2.
 - Similarly, another is to set `HISTFILE` to store `.bash_history` in the disk image.
+- Consider exporting your IntelliJ settings to the disk image so they can be imported
+  when recreating the WSL2 instance.
 
-To increase the size of an existing disk image:
+<details>
+<summary>It's a little involved, but it's possible to increase the size of an existing disk image</summary>
+
   ```bash
   # Shut everything down
   source /etc/disk-image.conf
@@ -239,21 +245,142 @@ To increase the size of an existing disk image:
   sudo systemctl start disk-image
   df -h /mnt/slidewsl
   ```
+</details>
 
-### YAML Q&A
+### SlideWSL for Production
 
-- Why both `compose.yaml` and `compose-slidewsl.yaml`?
+This is a rough draft to outline the steps involved.
 
-  _env_file_ runs after bind mounting, so it can't be used to override variables in
-  _.env_. To address this, `compose.yaml` loads _custom_ env files, before including
-  `compose-slidewsl.yaml`.
+<details>
+<summary>Ensure the root of your Angular project includes a .dockerignore</summary>
+
+```dockerignore
+node_modules
+dist
+.angular
+README.md
+```
+</details>
+
+<details>
+<summary>Sync your repo with the WSL2 instance, rebuild the YAML, and copy updates back to your workspace</summary>
+
+```bash
+root=/mnt/c/users/dave/Desktop/git/slidewsl
+dev sync
+```
+</details>
+
+<details>
+<summary>Set the TAG environment variable, build the build image, then build the rest</summary>
+
+```bash
+docker context use default
+export TAG=my-tag01
+BUILD_TAG=$TAG APP_NAME=my-project docker compose -f ~/slidewsl/compose.build.yaml --env-file=~/slidewsl/_env/build.env build build
+BUILD_TAG=$TAG APP_NAME=my-project docker compose -f ~/slidewsl/compose.build.yaml --env-file=~/slidewsl/_env/build.env build
+```
+</details>
+
+<details>
+<summary>Launch a local registry, tag the build, push, and list the registry content</summary>
+
+```bash
+docker network create registry-net
+docker run -d -p 5000:5000 --network=registry-net --name registry registry:2
+docker tag deploy-angular-ssr:$TAG localhost:5000/deploy-angular-ssr:$TAG
+docker tag deploy-mysql:$TAG localhost:5000/deploy-mysql:$TAG
+docker tag deploy-keydb-node1:$TAG localhost:5000/deploy-keydb-node1:$TAG
+docker tag deploy-keydb-node2:$TAG localhost:5000/deploy-keydb-node2:$TAG
+docker tag deploy-keydb-node3:$TAG localhost:5000/deploy-keydb-node3:$TAG
+docker tag deploy-phpmyadmin:$TAG localhost:5000/deploy-phpmyadmin:$TAG
+docker tag deploy-php-fpm:$TAG localhost:5000/deploy-php-fpm:$TAG
+docker tag deploy-nginx:$TAG localhost:5000/deploy-nginx:$TAG
+docker push localhost:5000/deploy-angular-ssr:$TAG
+docker push localhost:5000/deploy-mysql:$TAG
+docker push localhost:5000/deploy-keydb-node1:$TAG
+docker push localhost:5000/deploy-keydb-node2:$TAG
+docker push localhost:5000/deploy-keydb-node3:$TAG
+docker push localhost:5000/deploy-phpmyadmin:$TAG
+docker push localhost:5000/deploy-php-fpm:$TAG
+docker push localhost:5000/deploy-nginx:$TAG
+local-registry-list.sh|egrep "$TAG|Repo"
+```
+</details>
+
+<details>
+<summary>Launch the staging container, prepare SSH, and create the Docker Context</summary>
+
+```bash
+docker build -t staging ~/slidewsl/staging --build-context shared=~/slidewsl/shared
+docker run --name staging --network=registry-net --privileged --rm -u root -d -p 2375:2375 -p 2222:22 -p 8090:8080 -p 4450:443 staging
+
+ssh-keygen -t rsa -b 2048 -f ~/.ssh/id_rsa
+ssh-keygen -R [localhost]:2222
+ssh-copy-id -i ~/.ssh/id_rsa.pub root@localhost -p 2222 # the password is 'password'
+
+docker context create staging --docker "host=ssh://root@localhost:2222"
+```
+</details>
+
+<details>
+<summary>Deploy the stack</summary>
+
+```bash
+docker context use staging
+docker swarm init
+REGISTRY=registry:5000/ BUILD_TAG=$TAG docker stack deploy -d -c ~/slidewsl/compose.staging.yaml my-stack
+docker stack services my-stack
+docker service ps my-stack_angular-ssr --no-trunc # and others
+docker service logs my-stack_nginx -f # and others
+docker ps
+# test phpmyadmin at https://localhost:4450
+# test website at http://localhost:8090
+# be sure to return to the default context as needed
+docker context use default
+```
+</details>
+
+
+
+
+### Q&A
 
 - What is the _init_ service?
 
   If a volume source doesn't exist, the daemon creates it and makes _root_ the owner. To
   deal with this, some services depend on an _init_ service to ensure folders are properly
-  created and writable.
+  created and writable. There are two `init` services so that other services can depend on
+  that one and let it deal with service_completed_successfully.
 
+- How can I debug nginx problems?
+
+  Change the nginx Dockerfile to run `nginx-debug` and change nginx.conf to
+  enable debug logging with `error_log  /var/log/nginx/error.log debug;`.
+
+- (This no longer applies) ~~Why both `compose.yaml` and `compose-slidewsl.yaml`?~~
+
+  _env_file_ runs after bind mounting, so it can't be used to override variables in
+  _.env_. To address this, `compose.yaml` uses "include" because its `env_file` seems
+  to work in overriding before `compose-slidewsl.yaml` is added.
+
+- How can I use Angular SSR locally?
+
+  Both the older ssr-dev-server builder (`serve-ssr`) and the newer unified dev server
+  will work great as-is. Be sure to adjust your angular.json and the dev-server.conf
+  command as needed.
+
+  The tricky part is when testing our app in a way that more closely resembles production.
+  Of course, you could do a full deployment to the staging container.
+  But, if you'd like to test in the local dev environment,
+  here's a summary of the steps to get you started:
+
+  - Set `LOCAL_SSR_ENABLED` to true in local.env.
+    (If using the sync script approach, be sure to sync this change.)
+  - Create a _new_ starter app and hosts entry as described in the walkthrough: `docker compose run --rm angular starter example2`.
+  - Restart nginx: `docker compose up -d --force-recreate nginx`.
+  - Launch the ssr container: `APP=example2 docker compose up -d --force-recreate angular-ssr`.
+  - If you see gateway errors, ensure the ssr container is running and the domain name matches the project/dist folder name.
 
 ### IntelliJ
 
@@ -267,7 +394,9 @@ switch between them to pick up where you left off (you must log out of XFCE to u
    (see [530](https://github.com/microsoft/wslg/issues/530), [166](https://github.com/microsoft/wslg/issues/166)).
    To install JetBrains Toolbox, run `/opt/jetbrains-toolbox-2.2.1.19765/jetbrains-toolbox`.
    Afterward, use `~/.local/share/JetBrains/Toolbox/bin/jetbrains-toolbox >/dev/null 2>&1 &`.
-   To launch IntelliJ directly, `~/.local/share/JetBrains/Toolbox/apps/intellij-idea-ultimate/bin/idea.sh >/dev/null 2>&1 &`.
+   To launch IntelliJ directly, `find . -name ~/idea.sh` will show the file to launch, such as:
+   `~/.local/share/JetBrains/idea-IU-241.17890.1/bin/idea.sh >/dev/null 2>&1 &` or
+   `~/.local/share/JetBrains/Toolbox/apps/intellij-idea-ultimate/bin/idea.sh >/dev/null 2>&1 &`.
    Tip: Exit using the Quit menu option instead of clicking X.
    Open your project under `/mnt/slidewsl`, such as `/mnt/slidewsl/dave/src`.
 
@@ -286,7 +415,7 @@ switch between them to pick up where you left off (you must log out of XFCE to u
 
 #### Settings
 
-Required settings:
+These are suggested IntelliJ settings. After applying, consider exporting your settings to the disk image (or to your JetBrains account) so they can be imported when recreating the WSL2 instance:
 
 - `File | Settings | Plugins`
   - Install PHP, PHP Docker, PHP Remote Interpreter, GitToolBox, Blade
@@ -301,11 +430,15 @@ Required settings:
   - Map the value of `SLIDEWSL_LARAVEL_ROOT_IN_WSL` to `/laravel`.
 - `File | Settings | Languages & Frameworks | TypeScript`
   - Use types from server
+- Fix File Manager:
+  - Run: `sudo sh -c 'echo "/mnt/c/Windows/explorer.exe \\\\\\\\wsl\\\$\\\\OracleLinux_8_7\"\$1\" &" > /sbin/explorer && chmod +x /sbin/explorer'`
+  - Run: `xfce4-mime-settings &`
+  - Under Utilities, set File Manager to ("Other...") `/sbin/explorer "%s"`
 
 <details>
-<summary>Optional settings:</summary>
+<summary>Optional settings</summary>
 
-(These are other kinds of settings you may want to review. Obviously, personalize to your needs!) 
+These are other kinds of settings you may want to review:
 
 - `File | Settings | Appearance & Behavior | New UI`
   - Disable new UI
@@ -335,6 +468,7 @@ Required settings:
   - Use single quotes
 - `File | Settings | Version Control | Commit`
   - Use non-modal commit interface [uncheck]
+  - Enable all inspections, limit subject line: 50
 - `File | Settings | Editor | General`
   - Scroll, move caret, minimize editor scrolling
 </details>
@@ -342,11 +476,11 @@ Required settings:
 
 #### Debugging
 
-  If using options 1 or 2 as listed above, Xdebug should connect to IntelliJ without issue.
+  If using options 1 or 2 as listed above, Xdebug should connect to IntelliJ without any issues.
   If using option 4, Xdebug will use the _WSL2 gateway IP address_ as specified in php.ini:
     `xdebug.client_host=${WSL2_GATEWAY}`. You may need to update the Windows Defender firewall
     as described in [4139](https://github.com/microsoft/WSL/issues/4139), [11139](https://github.com/microsoft/WSL/issues/11139), and from [JetBrains](https://www.jetbrains.com/help/idea/how-to-use-wsl-development-environment-in-product.html#debugging_system_settings).
-    Run these commands from an elevated PowerShell whenever the WSL2 distro is recreated or when upgrading IntelliJ:
+    Run these commands from an elevated PowerShell when the WSL2 distro is created or recreated, or when upgrading IntelliJ:
 
   ```powershell
   New-NetFirewallRule -DisplayName "WSL" -Direction Inbound -InterfaceAlias "vEthernet (WSL)" -Action Allow
@@ -359,7 +493,7 @@ Required settings:
 #### Laravel
 
   - Browser requests to `/api` are routed to Laravel's `public/index.php`.
-  - Ensure your project's `proxy.conf.json` looks similar to:
+  - Your angular project may require a `proxy.conf.json` similar to:
     ```json
     {
       "/api/": {
@@ -382,7 +516,7 @@ Required settings:
     at once (ie: multiple WSL distros). But, be very careful not to mount the same disk image
     concurrently. Hint: Different locations should be specified in
     `/etc/disk-image.conf`. The systemd service is `disk-image`.
-    A better solution is running multiple Compose projects as detailed above.
+    A better solution is running multiple Compose projects as mentioned elsewhere.
 
   - Sample DOS commands for export/import:
 
@@ -411,7 +545,7 @@ using commands like:
   netsh interface portproxy delete v4tov4 listenport=3390 listenaddress=0.0.0.0
   ```
 
-- You may want to copy your .ssh folder into the WSL2 distro, such as:
+- You may want to copy your existing .ssh folder into the WSL2 distro, such as:
 
   ```bash
   cp /mnt/c/Users/<name>/.ssh/id_* ~/.ssh

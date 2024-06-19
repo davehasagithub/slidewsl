@@ -1,6 +1,15 @@
 
 ---
 
+**06/16/2024**
+
+- Generate Compose YAML files from Go Templates
+- Install golang, jq, local-registry-list.sh script
+- Collapse env files, stop using env_file attribute
+- Add staging container, support for stack deploy
+- Enable sparseVhd in WSL2 instance
+- Support Angular SSR
+
 **03/27/2024 - 04/07/2024**
 
 - Enable WSL interop [^1]
