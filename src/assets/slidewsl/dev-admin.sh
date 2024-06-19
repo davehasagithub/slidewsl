@@ -10,7 +10,6 @@ main() {
   elif [[ "$OPT" == "reset" ]]; then
     shift
     _call reset "$@"
-    _call list
   elif [[ "$OPT" == "list" ]]; then
     shift
     _call list "$@"
@@ -24,13 +23,13 @@ main() {
 usage() {
   cat <<EOF | sed "s/^    //"  | /usr/local/bin/daveml.sh -p "| "
 
-    <WBB>   Welcome to the SlideWSL development environment!   <CLR>
+    <WBB>   Welcome to SlideWSL!   <CLR>
 
     <CBX>To redisplay this info, type <CLR><KXW> dev <CLR> (or ~/slidewsl/dev-admin.sh)
 
     <GBX>Launch the environment <CLR><CXX>docker compose up -d
     <GBX>Tail the service logs  <CLR><CXX>docker compose logs -f
-    <GBX>Run webpack dev server <CLR><CXX>APPS="<YBX><app> <CLR><YXX>[...]<CXX>" docker compose up --force-recreate angular_dev_server -d
+    <GBX>Run webpack dev server <CLR><CXX>APPS="<YBX><app> <CLR><YXX>[...]<CXX>" docker compose up --force-recreate angular-dev-server -d
     <GBX>Compile an angular app <CLR><CXX>docker compose run --rm angular build <YBX><app> <CLR><YXX>[<base-href> [<other-args...>]]
     <GBX>See what's running     <CLR><CXX>docker compose ps
     <GBX>Stop all services      <CLR><CXX>docker compose --profile "*" down -v
@@ -45,7 +44,7 @@ usage() {
     <WXX>Run angular tests      <CXX>docker compose run --rm angular ng test <YXX><app><CXX> --watch=false
     <WXX>Show php version       <CXX>docker compose run --rm php php -v
     <WXX>Interactive terminal   <CXX>docker compose exec -it -u root <YXX><service><CXX> bash
-    <WXX> ⤷ then, for example:  <CXX>apt update; apt install -y <YXX>iputils-ping iproute2 net-tools telnet vim less
+    <WXX> ⤷ then, for example:  <CXX>apt update; apt install -y <YXX>iputils-ping iproute2 net-tools telnet vim less procps
 
     <WXX>Run sync.sh script     <CXX>${ALIAS_USED:-$0} sync
     <WXX>See Docker resources   <CXX>${ALIAS_USED:-$0} list <YXX>[stats]
@@ -62,7 +61,7 @@ ij-clean() {
   read -r -p "It's recommended to shut down IntelliJ first. Ready? [y/N] " response
   response=${response,,}
   if [[ "$response" =~ ^(yes|y)$ ]]; then
-    find /mnt/slidewsl/$USER/src -name ".angular" -type d -exec ls -ld {} \; -exec rm -rf {}/cache \;
+    find /mnt/slidewsl/"$USER"/src -name ".angular" -type d -exec ls -ld {} \; -exec rm -rf {}/cache \;
     local ids
     ids=$(docker ps --no-trunc|grep js-language-service|awk '{ print $1 }' ORS=' ')
     echo "containers: $ids"
@@ -85,16 +84,20 @@ stop() {
 }
 
 reset() {
-  stop
-  docker container prune -f || true
-  docker image prune -af || true
-  docker volume prune -af || true
-  docker network prune -f || true
-  if [[ "$1" == "cache" ]]; then
-    docker builder prune -af
+  read -r -p "Are you sure? [y/N] " response
+  response=${response,,}
+  if [[ "$response" =~ ^(yes|y)$ ]]; then
+    stop
+    docker container prune -f || true
+    docker image prune -af || true
+    docker volume prune -af || true
+    docker network prune -f || true
+    if [[ "$1" == "cache" ]]; then
+      docker builder prune -af
+    fi
+    # docker system prune --all || true
+    echo "done"
   fi
-  # docker system prune --all || true
-  echo "done"
 }
 
 list() {
@@ -109,6 +112,10 @@ list() {
   docker network ls
   echo -e "\n${HIGHLIGHT} volumes ${NC}"
   docker volume ls
+  echo -e "\n${HIGHLIGHT} buildx ${NC}"
+  docker buildx ls
+  echo -e "\n${HIGHLIGHT} contexts ${NC}"
+  docker context ls
   echo -e "\n${HIGHLIGHT} resources ${NC}"
   docker system df
   if [[ "$1" == "stats" ]]; then
