@@ -39,7 +39,7 @@ init() {
 }
 
 base_installs() {
-  dnf install -y dnf-utils zip unzip git bash-completion dbus-x11 telnet which hostname rsync lsof qemu-img
+  dnf install -y dnf-utils zip unzip git bash-completion dbus-x11 telnet which hostname rsync lsof qemu-img jq golang
   dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
   /usr/bin/crb enable
 }
@@ -68,6 +68,8 @@ install_docker() {
   chmod 644 /etc/docker/daemon.json
   chmod 644 /etc/systemd/system/docker.service.d/override.conf
   systemctl enable --now docker.service
+  cp "$asset_folder/local-registry-list.sh" /usr/local/bin/local-registry-list.sh
+  chmod 755 /usr/local/bin/local-registry-list.sh
 }
 
 # https://github.com/neutrinolabs/xrdp/issues/2491
