@@ -1,7 +1,0 @@
-name: slidewsl
-
-include:
-  - path: ./compose-slidewsl.yaml
-    env_file:
-      - docker-base.env
-      - ${DOCKER_CUSTOM_ENV:-docker-custom.env}

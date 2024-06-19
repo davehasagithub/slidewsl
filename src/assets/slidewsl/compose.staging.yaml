@@ -1,0 +1,109 @@
+# This file is auto-generated. Any changes made to this file will be lost.
+# Generated with the command: go run render.go --env-file /home/dave/slidewsl/_env/staging.env --environment staging --workspace-path /home/dave/slidewsl
+
+
+
+networks:
+  php-fpm:
+  keydb:
+  mysql:
+  angular:
+
+volumes:
+  keydb:
+  yarn-cache:
+  mysql:
+
+services:
+
+  angular-ssr:
+    image: ${REGISTRY-}deploy-angular-ssr:${BUILD_TAG}
+    hostname: angular-ssr
+    networks:
+      - angular
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+
+  nginx:
+    image: ${REGISTRY-}deploy-nginx:${BUILD_TAG}
+    hostname: nginx
+    environment:
+      EXTERNAL_WEB_PORT: ${EXTERNAL_WEB_PORT:-443}
+    ports:
+      - "0.0.0.0:${NGINX_SECURE_PORT:-443}:4430"
+    networks:
+      - php-fpm
+      - angular
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - angular-ssr
+      - php-fpm
+
+  php-fpm:
+    image: ${REGISTRY-}deploy-php-fpm:${BUILD_TAG}
+    hostname: php-fpm
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      PHP_INI_SCAN_DIR: /usr/local/etc/php/conf.d:/etc/php/conf.d
+    networks:
+      - php-fpm
+      - keydb
+      - mysql
+    depends_on:
+      - keydb-node1
+      - mysql
+
+  mysql:
+    image: ${REGISTRY-}deploy-mysql:${BUILD_TAG}
+    hostname: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    networks:
+      - mysql
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - mysql:/var/lib/mysql
+
+  phpmyadmin:
+    image: ${REGISTRY-}deploy-phpmyadmin:${BUILD_TAG}
+    hostname: phpmyadmin
+    environment:
+      PMA_HOST: mysql
+    networks:
+      - mysql
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "0.0.0.0:${PHPMYADMIN_PORT:-8080}:80"
+    depends_on:
+      - mysql
+
+  keydb-node1:
+    image: ${REGISTRY-}deploy-keydb-node1:${BUILD_TAG}
+    hostname: keydb-node1
+    networks:
+      - keydb
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - keydb:/data
+
+  keydb-node2:
+    image: ${REGISTRY-}deploy-keydb-node2:${BUILD_TAG}
+    hostname: keydb-node2
+    networks:
+      - keydb
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - keydb:/data
+
+  keydb-node3:
+    image: ${REGISTRY-}deploy-keydb-node3:${BUILD_TAG}
+    hostname: keydb-node3
+    networks:
+      - keydb
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - keydb:/data
+

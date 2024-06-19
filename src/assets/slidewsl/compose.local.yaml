@@ -1,0 +1,315 @@
+# This file is auto-generated. Any changes made to this file will be lost.
+# Generated with the command: go run render.go --env-file /home/dave/slidewsl/_env/local.env --environment local --workspace-path /home/dave/slidewsl
+
+name: slidewsl-local
+
+networks:
+  php-fpm:
+  keydb:
+  mysql:
+  angular:
+
+volumes:
+  keydb:
+  yarn-cache:
+
+services:
+
+  init:
+    image: alpine:3.19.1
+    depends_on:
+      init-fix-folders:
+        condition: service_completed_successfully
+
+  init-fix-folders:
+    image: alpine:3.19.1
+    user: "${WSL_UID}:${WSL_GID}"
+    command: "fix-folders.sh"
+    volumes:
+      - ./shared:/usr/local/bin/
+      - /:/host
+    environment:
+      SLIDEWSL_DB_ROOT_IN_WSL: ${SLIDEWSL_DB_ROOT_IN_WSL}
+      SLIDEWSL_ANGULAR_ROOT_IN_WSL: ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}
+      SLIDEWSL_LARAVEL_ROOT_IN_WSL: ${SLIDEWSL_LARAVEL_ROOT_IN_WSL}
+      SLIDEWSL_WEB_ROOT_IN_WSL: ${SLIDEWSL_WEB_ROOT_IN_WSL}
+
+  angular:
+    user: "${WSL_UID}:${WSL_GID}"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}:/app/angular
+      - ./node/scripts:/usr/local/bin/angular-scripts/
+      - ./node/conf:/usr/local/etc/angular/
+      - yarn-cache:/home/node/.cache/yarn
+    depends_on:
+      - init
+    environment:
+      NODE_VERSION: ${NODE_VERSION}
+      NG_CLI_VERSION: ${NG_CLI_VERSION}
+      LOCAL_SSR_ENABLED: ${LOCAL_SSR_ENABLED:-false}
+    build:
+      context: node
+      additional_contexts:
+        shared: shared
+      args:
+        - NODE_VERSION=$NODE_VERSION
+        - NG_CLI_VERSION=$NG_CLI_VERSION
+      target: development
+    profiles:
+      - angular
+
+  angular-dev-server:
+    container_name: ${COMPOSE_PROJECT_NAME}-angular-dev-server
+    hostname: angular-dev-server
+    user: "${WSL_UID}:${WSL_GID}"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}:/app/angular
+      - ./node/scripts:/usr/local/bin/angular-scripts/
+      - ./node/conf:/usr/local/etc/angular/
+      - yarn-cache:/home/node/.cache/yarn
+    depends_on:
+      - init
+    environment:
+      APPS: ${APPS:-app-not-specified}
+      CONF_FILENAME: ${CONF_FILENAME:-dev-server.conf}
+      NODE_VERSION: ${NODE_VERSION}
+      NG_CLI_VERSION: ${NG_CLI_VERSION}
+    networks:
+      - angular
+    build:
+      context: node
+      additional_contexts:
+        shared: shared
+      args:
+        - NODE_VERSION=$NODE_VERSION
+        - NG_CLI_VERSION=$NG_CLI_VERSION
+      target: dev_server
+    profiles:
+      - angular-dev-server
+
+  php:
+    user: "${WSL_UID}:${WSL_GID}"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/app/webroot
+      - ${SLIDEWSL_LARAVEL_ROOT_IN_WSL}:/app/laravel
+      - ./php/scripts:/usr/local/bin/php-scripts/
+      - ./php/conf:/etc/php/conf.d/
+      - ./php/etc:/etc/php_extras/
+    depends_on:
+      - init
+    build:
+      context: php
+      additional_contexts:
+        shared: shared
+      args:
+        - PHP_VERSION=$PHP_VERSION
+        - PHP_REDIS_VERSION=$PHP_REDIS_VERSION
+        - XDEBUG_VERSION=$XDEBUG_VERSION
+        - COMPOSER_HASH=$COMPOSER_HASH
+        - COMPOSER_VERSION=$COMPOSER_VERSION
+        - PHP_CS_FIXER_VERSION=$PHP_CS_FIXER_VERSION
+        - PHP_STAN_VERSION=$PHP_STAN_VERSION
+        - PSALM_VERSION=$PSALM_VERSION
+      target: development
+    profiles:
+      - php
+
+  staging:
+    container_name: staging
+    user: "root"
+    privileged: true
+    ports:
+      - "2222:22"
+    build:
+      context: staging
+      additional_contexts:
+        shared: shared
+    profiles:
+      - staging
+
+  angular-ssr:
+    container_name: ${COMPOSE_PROJECT_NAME}-angular-ssr
+    user: "${WSL_UID}:${WSL_GID}"
+    environment:
+      APP: ${APP:-app-not-specified}
+    hostname: angular-ssr
+    networks:
+      - angular
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./nginx/templates:/etc/nginx/templates:ro
+      - ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}:/app/angular
+      - ${SLIDEWSL_LARAVEL_ROOT_IN_WSL}:/app/laravel
+      - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/app/webroot
+    profiles:
+      - angular-ssr
+    depends_on:
+      - init
+    build:
+      context: node
+      target: dev-angular-ssr
+      additional_contexts:
+        shared: shared
+      args:
+        - NODE_VERSION=$NODE_VERSION
+        - NG_CLI_VERSION=$NG_CLI_VERSION
+
+  nginx:
+    container_name: ${COMPOSE_PROJECT_NAME}-nginx
+    user: "${WSL_UID}:${WSL_GID}"
+    hostname: nginx
+    environment:
+      EXTERNAL_WEB_PORT: ${EXTERNAL_WEB_PORT:-443}
+      LOCAL_SSR_ENABLED: ${LOCAL_SSR_ENABLED:-false}
+    ports:
+      - "0.0.0.0:${NGINX_SECURE_PORT:-443}:4430"
+      - "0.0.0.0:${ANGULAR_DEV_SERVER_PORT_RANGE:-4200-4210}:4200-4210"
+    networks:
+      - php-fpm
+      - angular
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./nginx/templates:/etc/nginx/templates:ro
+      - ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}:/app/angular
+      - ${SLIDEWSL_LARAVEL_ROOT_IN_WSL}:/app/laravel
+      - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/app/webroot
+    depends_on:
+      - init
+      - php-fpm
+    build:
+      context: nginx
+      additional_contexts:
+        shared: shared
+      target: development
+
+  php-fpm:
+    container_name: ${COMPOSE_PROJECT_NAME}-php-fpm
+    user: "${WSL_UID}:${WSL_GID}"
+    hostname: php-fpm
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/app/webroot
+      - ${SLIDEWSL_LARAVEL_ROOT_IN_WSL}:/app/laravel
+      - ./php/scripts:/usr/local/bin/php-scripts/
+      - ./php/conf:/etc/php/conf.d/
+      - ./php/etc:/etc/php_extras/
+    environment:
+      PHP_INI_SCAN_DIR: /usr/local/etc/php/conf.d:/etc/php/conf.d
+      WSL2_GATEWAY: ${WSL2_GATEWAY}
+    networks:
+      - php-fpm
+      - keydb
+      - mysql
+    depends_on:
+      - keydb-node1
+      - mysql
+    build:
+      context: php
+      additional_contexts:
+        shared: shared
+      args:
+        - PHP_VERSION=$PHP_VERSION
+        - PHP_REDIS_VERSION=$PHP_REDIS_VERSION
+        - XDEBUG_VERSION=$XDEBUG_VERSION
+        - COMPOSER_HASH=$COMPOSER_HASH
+        - COMPOSER_VERSION=$COMPOSER_VERSION
+        - PHP_CS_FIXER_VERSION=$PHP_CS_FIXER_VERSION
+        - PHP_STAN_VERSION=$PHP_STAN_VERSION
+        - PSALM_VERSION=$PSALM_VERSION
+      target: php-fpm
+
+  mysql:
+    container_name: ${COMPOSE_PROJECT_NAME}-mysql
+    user: "${WSL_UID}:${WSL_GID}"
+    depends_on:
+      - init
+    hostname: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    networks:
+      - mysql
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./mysql/scripts:/usr/local/bin/mysql-scripts/
+      - ./mysql/conf/docker.cnf:/etc/my.cnf
+      - ${SLIDEWSL_DB_ROOT_IN_WSL}:/var/lib/mysql
+    build:
+      context: mysql
+      additional_contexts:
+        shared: shared
+      target: development
+
+  phpmyadmin:
+    container_name: ${COMPOSE_PROJECT_NAME}-phpmyadmin
+    user: "${WSL_UID}:${WSL_GID}"
+    hostname: phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: ${PMA_USER}
+      PMA_PASSWORD: ${PMA_PASSWORD}
+    networks:
+      - mysql
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./phpmyadmin/conf.d:/etc/phpmyadmin/conf.d
+    ports:
+      - "0.0.0.0:${PHPMYADMIN_PORT:-8080}:80"
+    build:
+      context: phpmyadmin
+      additional_contexts:
+        shared: shared
+      target: development
+    depends_on:
+      - mysql
+
+  keydb-node1:
+    container_name: ${COMPOSE_PROJECT_NAME}-keydb-node1
+    user: "${WSL_UID}:${WSL_GID}"
+    hostname: keydb-node1
+    networks:
+      - keydb
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - keydb:/data
+      - ./keydb/keydb-node1:/etc/keydb
+    build:
+      context: keydb
+      additional_contexts:
+        shared: shared
+      target: development
+
+  keydb-node2:
+    container_name: ${COMPOSE_PROJECT_NAME}-keydb-node2
+    user: "${WSL_UID}:${WSL_GID}"
+    hostname: keydb-node2
+    networks:
+      - keydb
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - keydb:/data
+      - ./keydb/keydb-node2:/etc/keydb
+    build:
+      context: keydb
+      additional_contexts:
+        shared: shared
+      target: development
+
+  keydb-node3:
+    container_name: ${COMPOSE_PROJECT_NAME}-keydb-node3
+    user: "${WSL_UID}:${WSL_GID}"
+    hostname: keydb-node3
+    networks:
+      - keydb
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - keydb:/data
+      - ./keydb/keydb-node3:/etc/keydb
+    build:
+      context: keydb
+      additional_contexts:
+        shared: shared
+      target: development
+
