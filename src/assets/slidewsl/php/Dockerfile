@@ -1,19 +1,9 @@
+ARG BUILD_IMAGE=undefined
 ARG PHP_VERSION
 FROM php:${PHP_VERSION}-fpm as base
 
+USER root
 ARG PHP_REDIS_VERSION
-ARG XDEBUG_VERSION
-ARG COMPOSER_HASH
-ARG COMPOSER_VERSION
-ARG PHP_CS_FIXER_VERSION
-ARG PHP_STAN_VERSION
-ARG PSALM_VERSION
-
-#RUN useradd --system --no-create-home --home /nonexistent --shell /bin/false php
-RUN useradd php --create-home
-
-COPY --from=shared add-fixuid.sh /usr/local/bin
-RUN add-fixuid.sh php php
 
 RUN --mount=type=cache,sharing=locked,target=/var/cache/apt \
     apt-get update \
@@ -34,24 +24,52 @@ RUN --mount=type=cache,sharing=locked,target=/var/cache/apt \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pecl install redis-${PHP_REDIS_VERSION} \
-	&& pecl install xdebug-${XDEBUG_VERSION} \
-	&& docker-php-ext-enable redis xdebug
+	&& docker-php-ext-enable redis
+
+RUN useradd php --create-home
+RUN mkdir -p /app/laravel && chown -R php:php /app
+WORKDIR /app/laravel
+
+FROM base as development-base
+
+ARG COMPOSER_HASH
+ARG COMPOSER_VERSION
+
+COPY --from=shared add-fixuid.sh /usr/local/bin
+RUN add-fixuid.sh php php
+RUN wget -nv https://raw.githubusercontent.com/composer/getcomposer.org/${COMPOSER_HASH}/web/installer -O /tmp/composer_${COMPOSER_VERSION}.phar \
+    && cat /tmp/composer_${COMPOSER_VERSION}.phar | php -- --version="${COMPOSER_VERSION}" --install-dir="/usr/local/bin" --filename="composer"
+ENV PATH="$PATH:/usr/local/bin/php-scripts/"
 
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
-RUN wget -nv https://raw.githubusercontent.com/composer/getcomposer.org/${COMPOSER_HASH}/web/installer -O /tmp/composer_${COMPOSER_VERSION}.phar \
-    && cat /tmp/composer_${COMPOSER_VERSION}.phar | php -- --version="${COMPOSER_VERSION}" --install-dir="/usr/local/bin" --filename="composer" \
-    && mkdir -p /tools \
+FROM development-base as development
+
+ARG XDEBUG_VERSION
+ARG PHP_CS_FIXER_VERSION
+ARG PHP_STAN_VERSION
+ARG PSALM_VERSION
+
+RUN pecl install xdebug-${XDEBUG_VERSION} \
+	&& docker-php-ext-enable xdebug
+
+RUN mkdir -p /tools \
     && composer require --working-dir=/tools friendsofphp/php-cs-fixer:${PHP_CS_FIXER_VERSION} phpstan/phpstan:${PHP_STAN_VERSION} vimeo/psalm:${PSALM_VERSION} --no-interaction
-
-ENV PATH="$PATH:/usr/local/bin/php-scripts/"
-
-WORKDIR /laravel
 
 USER php
 ENTRYPOINT ["fixuid", "entrypoint.sh"]
 
-FROM base as php-fpm
-
+FROM development-base as php-fpm
 ENTRYPOINT ["fixuid", "prepare-vendor.sh", "docker-php-entrypoint"]
 CMD ["php-fpm"]
+
+FROM ${BUILD_IMAGE} AS build-image
+
+FROM base as deployable
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+ARG CONF=${CONF:-undefined}
+RUN if [ "${CONF}" = "undefined" ]; then echo "CONF is not set"; exit 1; fi
+COPY --from=build-image --chown=php:php /app/laravel /app/laravel/
+COPY --chmod=0444 ${CONF}/* /etc/php/conf.d/
+COPY --chmod=0444 etc/* /etc/php_extras/
+USER php

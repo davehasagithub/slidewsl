@@ -1,7 +1,7 @@
 # For serving builds of our angular apps
 
 # By default, we'll use the domain to calculate the root subfolder under
-# /dist For example, foo.com or local.foo.com will map to /angular/dist/foo.
+# /dist For example, foo.com or local.foo.com will map to /app/angular/dist/foo.
 # The example 'bar' entry is an alternative approach using a direct mapping.
 #
 # If you need to customize this further, consider creating your own config
@@ -11,7 +11,17 @@
 map $host $dist_root {
   default unknown;
   local.bar.com /some/other/folder;
-  ~^((?<subdomain>[^.]+)\.)*(?<domain>[^.]+)\.(com|org)$ /angular/dist/$domain;
+  ~^((?<subdomain>[^.]+)\.)*(?<domain>[^.]+)\.(com|org)$ /app/angular/dist/$domain;
+}
+
+map $LOCAL_SSR_ENABLED $ssrIndex1 {
+  default "";
+  "false" "/index.csr.html";
+}
+
+map $LOCAL_SSR_ENABLED $ssrIndex2 {
+  default "";
+  "false" "/index.html";
 }
 
 include /etc/nginx/nginx.*.conf;
@@ -20,28 +30,55 @@ server {
     listen       4430 ssl;
     server_name  localhost;
 
-    root $dist_root;
-
-    add_header X-Dist-Root $dist_root always;
-
     ssl_certificate     /etc/nginx/certs/cert.crt;
     ssl_certificate_key /etc/nginx/certs/cert.key;
 
     location / {
-      index index.html;
-      try_files $uri $uri/ /index.html$is_args$args =404;
+      root /app/webroot;
+      try_files $uri @dist;
     }
 
-    location /api {
-      alias /laravel/public;
-      try_files $uri $uri/ /index.php$is_args$args;
+    location @dist {
+      root $dist_root;
+      try_files $uri @browser;
+    }
+
+    location @browser {
+      root $dist_root/browser;
+      try_files $uri $ssrIndex1 $ssrIndex2 @ssr;
+    }
+
+    location @ssr {
+      resolver 127.0.0.11; # https://stackoverflow.com/a/22259088
+      set $ssr_port "4000"; # using a variable causes runtime evaluation of the config so it passes when the host isn't up
+      proxy_pass http://angular-ssr:$ssr_port;
+      proxy_http_version 1.1;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header X-Forwarded-Port ${EXTERNAL_WEB_PORT};
+      proxy_max_temp_file_size 0;
+      proxy_set_header Connection 'upgrade';
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_cache_bypass $http_upgrade;
+    }
+
+    location /api/ {
+      alias /laravel/public/;
+      try_files $uri /index.php$is_args$args;
     }
 
     location ~ [^/]\.php$ {
       include fastcgi_params;
-      fastcgi_param SCRIPT_FILENAME /laravel/public/index.php;
+      fastcgi_param SCRIPT_FILENAME /app/laravel/public/index.php;
       fastcgi_param SCRIPT_NAME     '/api/index.php';
       fastcgi_param SERVER_NAME     $host;
       fastcgi_pass  php-fpm:9000;
     }
+
+    # location ~* \.(?:manifest|appcache|html?|xml|json)$
+    # location ~* \.(?:css|js|bmp|gif|jpeg|jpg|ico|png|svg|woff|woff2)$ {
+    # expires 1y;
+    # add_header Cache-Control "public, must-revalidate, proxy-revalidate";
 }

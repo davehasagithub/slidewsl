@@ -18,9 +18,9 @@ if [[ "$HOSTNAME" == "keydb-node1" ]]; then
     for (( attempt=1; attempt<=max_attempts; attempt++ )); do
       # https://redis.io/docs/management/scaling/
       # https://github.com/redis/redis/issues/2186
-      node1=$(getent hosts keydb-node1 | awk '{ print $1 }')
-      node2=$(getent hosts keydb-node2 | awk '{ print $1 }')
-      node3=$(getent hosts keydb-node3 | awk '{ print $1 }')
+      node1=$(getent hosts keydb-node1 | awk '{ print $1 }' | head -n1)
+      node2=$(getent hosts keydb-node2 | awk '{ print $1 }' | head -n1)
+      node3=$(getent hosts keydb-node3 | awk '{ print $1 }' | head -n1)
       if [[ -n "$node1" && -n "$node2" && -n "$node3" ]]; then
         ((attempts_with_resolved++))
         if [[ $attempts_with_resolved == 1 ]]; then

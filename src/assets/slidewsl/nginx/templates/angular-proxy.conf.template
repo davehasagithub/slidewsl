@@ -33,18 +33,6 @@ server {
 
   location / {
     include /etc/nginx/templates/angular-proxy.conf.include;
-    proxy_read_timeout 1000ms;
-    error_page 504 @handle_504_1;
-  }
-
-  location @handle_504_1 {
-    include /etc/nginx/templates/angular-proxy.conf.include;
-    proxy_read_timeout 3s;
-    error_page 504 @handle_504_2;
-  }
-
-  location @handle_504_2 {
-    include /etc/nginx/templates/angular-proxy.conf.include;
   }
 
   location /ng-cli-ws {
