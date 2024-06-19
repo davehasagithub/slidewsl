@@ -42,9 +42,16 @@ set "password=%~2"
 set "syncPath=%~3"
 
 if not "!syncPath!" == "" (
-  if not exist "!syncPath!" (
+  if exist "!syncPath!" (
+    if exist !syncPath!\* (
+      echo syncPath is a directory, not a file
+      echo Aborting.
+      exit /b 1
+    )
+  ) else (
     echo sync script not found at !syncPath!
     goto ShowUsage
+    exit /b 1
   )
 )
 
@@ -97,6 +104,7 @@ wsl --set-default %distro%
 wsl -u root -e sh -c "echo -e [user]\\ndefault=%username% >/etc/wsl.conf"
 wsl -u root -e sh -c "echo -e [boot]\\nsystemd=true >>/etc/wsl.conf"
 wsl -u root -e sh -c "echo -e [interop]\\nenabled=true\\nappendWindowsPath=false >>/etc/wsl.conf"
+wsl -u root -e sh -c "echo -e [experimental]\\nsparseVhd=true >>/etc/wsl.conf"
 wsl -u root -e sh -c "dnf install -y dos2unix"
 echo wsl shutting down
 wsl --shutdown
@@ -120,7 +128,7 @@ if not exist "%tempProvisionPath%/wsl/%tempProvisionScript%" (
 
 if not "%syncPath%" == "" (
   echo adding %syncPath%
-  copy "%syncPath%" "%tempProvisionPath%/slidewsl/sync.sh"
+  copy "%syncPath%" "%tempProvisionPath%\slidewsl\sync.sh"
 )
 
 echo provisioning
