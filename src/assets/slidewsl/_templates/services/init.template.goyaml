@@ -1,0 +1,7 @@
+{{- define "init" }}
+  init:
+    image: alpine:3.19.1
+    depends_on:
+      init-fix-folders:
+        condition: service_completed_successfully
+{{- end -}}

@@ -1,0 +1,56 @@
+{{- define "angular" }}
+  angular:
+    {{- template "_angular-base" . }}
+    environment:
+      NODE_VERSION: ${NODE_VERSION}
+      NG_CLI_VERSION: ${NG_CLI_VERSION}
+      LOCAL_SSR_ENABLED: ${LOCAL_SSR_ENABLED:-false}
+  {{- if .INCLUDE_BUILD }}
+    {{- template "_angular-build" . }}
+      target: development
+  {{- end }}
+    profiles:
+      - angular
+{{- end -}}
+
+{{- define "angular-dev-server" }}
+  angular-dev-server:
+    container_name: ${COMPOSE_PROJECT_NAME}-angular-dev-server
+    hostname: angular-dev-server
+    {{- template "_angular-base" . }}
+    environment:
+      APPS: ${APPS:-app-not-specified}
+      CONF_FILENAME: ${CONF_FILENAME:-dev-server.conf}
+      NODE_VERSION: ${NODE_VERSION}
+      NG_CLI_VERSION: ${NG_CLI_VERSION}
+    networks:
+      - angular
+  {{- if .INCLUDE_BUILD }}
+    {{- template "_angular-build" . }}
+      target: dev_server
+  {{- end }}
+    profiles:
+      - angular-dev-server
+{{- end -}}
+
+{{- define "_angular-base" }}
+    user: "${WSL_UID}:${WSL_GID}"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}:/app/angular
+      - ./node/scripts:/usr/local/bin/angular-scripts/
+      - ./node/conf:/usr/local/etc/angular/
+      - yarn-cache:/home/node/.cache/yarn
+    depends_on:
+      - init
+{{- end -}}
+
+{{- define "_angular-build" }}
+    build:
+      context: node
+      additional_contexts:
+        shared: shared
+      args:
+        - NODE_VERSION=$NODE_VERSION
+        - NG_CLI_VERSION=$NG_CLI_VERSION
+{{- end -}}

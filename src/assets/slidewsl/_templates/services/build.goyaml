@@ -1,0 +1,20 @@
+{{- define "build" }}
+  build:
+    image: ${REGISTRY-}deploy-build:${BUILD_TAG}
+    deploy:
+      replicas: 0
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    build:
+      context: node
+      additional_contexts:
+        angular: ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}
+        laravel: ${SLIDEWSL_LARAVEL_ROOT_IN_WSL}
+        webroot: ${SLIDEWSL_WEB_ROOT_IN_WSL}
+      target: build
+      args:
+        - APP_NAME=${APP_NAME:-undefined}
+        - NODE_VERSION=$NODE_VERSION
+        - NG_CLI_VERSION=$NG_CLI_VERSION
+        - BUILD_IMAGE=deploy-build:$BUILD_TAG
+{{- end -}}

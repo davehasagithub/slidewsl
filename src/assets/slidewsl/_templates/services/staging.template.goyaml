@@ -1,0 +1,14 @@
+{{- define "staging" }}
+  staging:
+    container_name: staging
+    user: "root"
+    privileged: true
+    ports:
+      - "2222:22"
+    build:
+      context: staging
+      additional_contexts:
+        shared: shared
+    profiles:
+      - staging
+{{- end -}}

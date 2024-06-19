@@ -1,0 +1,82 @@
+{{- define "php" }}
+{{- if not .FOR_DEPLOYMENT }}
+  php:
+    user: "${WSL_UID}:${WSL_GID}"
+    {{- template "_php-volumes" . }}
+    depends_on:
+      - init
+  {{- if .INCLUDE_BUILD }}
+    {{- template "_php-build" . }}
+      target: development
+  {{- end }}
+    profiles:
+      - php
+{{- end -}}
+{{- end -}}
+
+{{- define "php-fpm" }}
+  php-fpm:
+  {{- if .FOR_DEPLOYMENT }}
+    image: ${REGISTRY-}deploy-php-fpm:${BUILD_TAG}
+  {{- else }}
+    container_name: ${COMPOSE_PROJECT_NAME}-php-fpm
+    user: "${WSL_UID}:${WSL_GID}"
+  {{- end }}
+    hostname: php-fpm
+    {{- template "_php-volumes" . }}
+    environment:
+      PHP_INI_SCAN_DIR: /usr/local/etc/php/conf.d:/etc/php/conf.d
+    {{- if not .FOR_DEPLOYMENT }}
+      WSL2_GATEWAY: ${WSL2_GATEWAY}
+    {{- end }}
+    networks:
+      - php-fpm
+      - keydb
+      - mysql
+    depends_on:
+      - keydb-node1
+      - mysql
+  {{- if .INCLUDE_BUILD }}
+    {{- template "_php-build" . }}
+    {{- if .FOR_DEPLOYMENT }}
+      target: deployable
+    {{- else }}
+      target: php-fpm
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- define "_php-volumes" }}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    {{- if not .FOR_DEPLOYMENT }}
+      - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/app/webroot
+      - ${SLIDEWSL_LARAVEL_ROOT_IN_WSL}:/app/laravel
+      - ./php/scripts:/usr/local/bin/php-scripts/
+      - ./php/conf:/etc/php/conf.d/
+      - ./php/etc:/etc/php_extras/
+    {{- end -}}
+{{- end -}}
+
+{{- define "_php-build" }}
+  {{- if .INCLUDE_BUILD }}
+    build:
+      context: php
+      additional_contexts:
+        shared: shared
+      args:
+        - PHP_VERSION=$PHP_VERSION
+        - PHP_REDIS_VERSION=$PHP_REDIS_VERSION
+    {{- if .FOR_DEPLOYMENT }}
+        - CONF=conf
+        - BUILD_IMAGE=deploy-build:$BUILD_TAG
+    {{- else }}
+        - XDEBUG_VERSION=$XDEBUG_VERSION
+        - COMPOSER_HASH=$COMPOSER_HASH
+        - COMPOSER_VERSION=$COMPOSER_VERSION
+        - PHP_CS_FIXER_VERSION=$PHP_CS_FIXER_VERSION
+        - PHP_STAN_VERSION=$PHP_STAN_VERSION
+        - PSALM_VERSION=$PSALM_VERSION
+    {{- end -}}
+  {{- end -}}
+{{- end -}}

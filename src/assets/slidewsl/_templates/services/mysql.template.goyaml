@@ -1,0 +1,38 @@
+{{- define "mysql" }}
+  mysql:
+  {{- if .FOR_DEPLOYMENT }}
+    image: ${REGISTRY-}deploy-mysql:${BUILD_TAG}
+  {{- else }}
+    container_name: ${COMPOSE_PROJECT_NAME}-mysql
+    user: "${WSL_UID}:${WSL_GID}"
+    depends_on:
+      - init
+  {{- end }}
+    hostname: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    networks:
+      - mysql
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    {{- if not .FOR_DEPLOYMENT }}
+      - ./mysql/scripts:/usr/local/bin/mysql-scripts/
+      - ./mysql/conf/docker.cnf:/etc/my.cnf
+      - ${SLIDEWSL_DB_ROOT_IN_WSL}:/var/lib/mysql
+    {{- else }}
+      - mysql:/var/lib/mysql
+    {{- end }}
+  {{- if .INCLUDE_BUILD }}
+    build:
+      context: mysql
+      additional_contexts:
+        shared: shared
+    {{- if .FOR_DEPLOYMENT }}
+      target: deployable
+      args:
+        - CONF=conf/docker.cnf
+    {{- else }}
+      target: development
+    {{- end -}}
+  {{- end -}}
+{{- end -}}

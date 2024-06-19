@@ -1,0 +1,44 @@
+{{- define "compose" -}}
+{{- if .INCLUDE_BUILD -}}
+name: slidewsl-{{ .ENVIRONMENT }}
+{{- end }}
+
+networks:
+  php-fpm:
+  keydb:
+  mysql:
+  angular:
+{{- if and .FOR_DEPLOYMENT .INCLUDE_BUILD }}
+  builder-net:
+{{- end }}
+
+volumes:
+  keydb:
+  yarn-cache:
+{{- if .FOR_DEPLOYMENT }}
+  mysql:
+{{- end }}
+
+services:
+
+{{- if and .FOR_DEPLOYMENT .INCLUDE_BUILD }}
+{{ template "build" . }}
+{{- end }}
+{{- if not .FOR_DEPLOYMENT }}
+{{ template "init" . }}
+{{ template "init-fix-folders" . }}
+{{ template "angular" . }}
+{{ template "angular-dev-server" . }}
+{{ template "php" . }}
+{{ template "staging" . }}
+{{- end }}
+{{ template "angular-ssr" . }}
+{{ template "nginx" . }}
+{{ template "php-fpm" . }}
+{{ template "mysql" . }}
+{{ template "phpmyadmin" . }}
+{{ template "keydb" (merge . (dict . "INSTANCE" "1")) }}
+{{ template "keydb" (merge . (dict . "INSTANCE" "2")) }}
+{{ template "keydb" (merge . (dict . "INSTANCE" "3")) }}
+
+{{ end -}}

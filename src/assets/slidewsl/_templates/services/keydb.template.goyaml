@@ -1,0 +1,31 @@
+{{- define "keydb" }}
+  keydb-node{{ .INSTANCE }}:
+  {{- if .FOR_DEPLOYMENT }}
+    image: ${REGISTRY-}deploy-keydb-node{{ .INSTANCE }}:${BUILD_TAG}
+  {{- else }}
+    container_name: ${COMPOSE_PROJECT_NAME}-keydb-node{{ .INSTANCE }}
+    user: "${WSL_UID}:${WSL_GID}"
+  {{- end }}
+    hostname: keydb-node{{ .INSTANCE }}
+    networks:
+      - keydb
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - keydb:/data
+    {{- if not .FOR_DEPLOYMENT }}
+      - ./keydb/keydb-node{{ .INSTANCE }}:/etc/keydb
+    {{- end }}
+  {{- if .INCLUDE_BUILD }}
+    build:
+      context: keydb
+      additional_contexts:
+        shared: shared
+    {{- if .FOR_DEPLOYMENT }}
+      target: deployable
+      args:
+        - CONF=keydb-node{{ .INSTANCE }}/keydb.conf
+    {{- else }}
+      target: development
+    {{- end -}}
+  {{- end -}}
+{{- end -}}

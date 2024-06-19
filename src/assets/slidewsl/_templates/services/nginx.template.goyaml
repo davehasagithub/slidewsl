@@ -1,0 +1,51 @@
+{{- define "nginx" }}
+  nginx:
+  {{- if .FOR_DEPLOYMENT }}
+    image: ${REGISTRY-}deploy-nginx:${BUILD_TAG}
+  {{- else }}
+    container_name: ${COMPOSE_PROJECT_NAME}-nginx
+    user: "${WSL_UID}:${WSL_GID}"
+  {{- end }}
+    hostname: nginx
+    environment:
+      EXTERNAL_WEB_PORT: ${EXTERNAL_WEB_PORT:-443}
+    {{- if not .FOR_DEPLOYMENT }}
+      LOCAL_SSR_ENABLED: ${LOCAL_SSR_ENABLED:-false}
+    {{- end }}
+    ports:
+      - "0.0.0.0:${NGINX_SECURE_PORT:-443}:4430"
+    {{- if not .FOR_DEPLOYMENT }}
+      - "0.0.0.0:${ANGULAR_DEV_SERVER_PORT_RANGE:-4200-4210}:4200-4210"
+    {{- end }}
+    networks:
+      - php-fpm
+      - angular
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    {{- if not .FOR_DEPLOYMENT }}
+      - ./nginx/templates:/etc/nginx/templates:ro
+      - ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}:/app/angular
+      - ${SLIDEWSL_LARAVEL_ROOT_IN_WSL}:/app/laravel
+      - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/app/webroot
+    {{- end }}
+    depends_on:
+    {{- if not .FOR_DEPLOYMENT }}
+      - init
+    {{- else }}
+      - angular-ssr
+    {{- end }}
+      - php-fpm
+  {{- if .INCLUDE_BUILD }}
+    build:
+      context: nginx
+      additional_contexts:
+        shared: shared
+    {{- if .FOR_DEPLOYMENT }}
+      target: deployable
+      args:
+        - BUILD_IMAGE=deploy-build:$BUILD_TAG
+    {{- else }}
+      target: development
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
