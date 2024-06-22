@@ -27,33 +27,35 @@ services:
   nginx:
     image: ${REGISTRY-}deploy-nginx:${BUILD_TAG}
     hostname: nginx
+    depends_on:
+      - php-fpm
+      - angular-ssr
     environment:
-      EXTERNAL_WEB_PORT: ${EXTERNAL_WEB_PORT:-443}
+      - EXTERNAL_WEB_PORT=4450
+      - SSR_ENABLED=true
     ports:
-      - "0.0.0.0:${NGINX_SECURE_PORT:-443}:4430"
+      - "0.0.0.0:443:4430"
     networks:
       - php-fpm
       - angular
     volumes:
       - /etc/localtime:/etc/localtime:ro
-    depends_on:
-      - angular-ssr
-      - php-fpm
 
   php-fpm:
     image: ${REGISTRY-}deploy-php-fpm:${BUILD_TAG}
     hostname: php-fpm
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - keydb-node1
+      - mysql
     environment:
-      PHP_INI_SCAN_DIR: /usr/local/etc/php/conf.d:/etc/php/conf.d
+      - APP_ENV=local
+      - PHP_INI_SCAN_DIR=/usr/local/etc/php/conf.d:/etc/php/conf.d
     networks:
       - php-fpm
       - keydb
       - mysql
-    depends_on:
-      - keydb-node1
-      - mysql
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
 
   mysql:
     image: ${REGISTRY-}deploy-mysql:${BUILD_TAG}
@@ -69,16 +71,16 @@ services:
   phpmyadmin:
     image: ${REGISTRY-}deploy-phpmyadmin:${BUILD_TAG}
     hostname: phpmyadmin
+    depends_on:
+      - mysql
     environment:
-      PMA_HOST: mysql
+      - PMA_HOST=mysql
+    ports:
+      - "0.0.0.0:8080:80"
     networks:
       - mysql
     volumes:
       - /etc/localtime:/etc/localtime:ro
-    ports:
-      - "0.0.0.0:${PHPMYADMIN_PORT:-8080}:80"
-    depends_on:
-      - mysql
 
   keydb-node1:
     image: ${REGISTRY-}deploy-keydb-node1:${BUILD_TAG}

@@ -14,12 +14,12 @@ map $host $dist_root {
   ~^((?<subdomain>[^.]+)\.)*(?<domain>[^.]+)\.(com|org)$ /app/angular/dist/$domain;
 }
 
-map $LOCAL_SSR_ENABLED $ssrIndex1 {
+map $SSR_ENABLED $ssrIndex1 {
   default "";
   "false" "/index.csr.html";
 }
 
-map $LOCAL_SSR_ENABLED $ssrIndex2 {
+map $SSR_ENABLED $ssrIndex2 {
   default "";
   "false" "/index.html";
 }

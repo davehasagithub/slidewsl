@@ -1,15 +1,16 @@
 {{- define "compose" -}}
 {{- if .INCLUDE_BUILD -}}
-name: slidewsl-{{ .ENVIRONMENT }}
+name: slidewsl-{{ .ENV }}
 {{- end }}
 
 networks:
+{{- if .FOR_BUILDER }}
+  builder-net:
+{{- else }}
   php-fpm:
   keydb:
   mysql:
   angular:
-{{- if and .FOR_DEPLOYMENT .INCLUDE_BUILD }}
-  builder-net:
 {{- end }}
 
 volumes:
@@ -21,10 +22,10 @@ volumes:
 
 services:
 
-{{- if and .FOR_DEPLOYMENT .INCLUDE_BUILD }}
+{{- if and .FOR_BUILDER }}
 {{ template "build" . }}
 {{- end }}
-{{- if not .FOR_DEPLOYMENT }}
+{{- if not (or .FOR_BUILDER .FOR_DEPLOYMENT) }}
 {{ template "init" . }}
 {{ template "init-fix-folders" . }}
 {{ template "angular" . }}
@@ -37,8 +38,8 @@ services:
 {{ template "php-fpm" . }}
 {{ template "mysql" . }}
 {{ template "phpmyadmin" . }}
-{{ template "keydb" (merge . (dict . "INSTANCE" "1")) }}
-{{ template "keydb" (merge . (dict . "INSTANCE" "2")) }}
-{{ template "keydb" (merge . (dict . "INSTANCE" "3")) }}
+{{ template "keydb" (merge . "INSTANCE" "1") }}
+{{ template "keydb" (merge . "INSTANCE" "2") }}
+{{ template "keydb" (merge . "INSTANCE" "3") }}
 
 {{ end -}}

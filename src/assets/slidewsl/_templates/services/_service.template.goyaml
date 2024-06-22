@@ -1,0 +1,132 @@
+{{- define "_service" }}
+  {{ .SERVICE_NAME }}:
+
+{{- /* ------------------------------------------------------------------- */ -}}
+{{- "" }}
+{{- if or .FOR_BUILDER .FOR_DEPLOYMENT }}
+  {{- if .IMAGE }}
+    image: {{ .IMAGE }}
+  {{- end }}
+{{- else }}
+  {{- if .CONTAINER_NAME }}
+    container_name: {{ .CONTAINER_NAME }}
+  {{- end }}
+    user: "{{ .USER }}"
+{{- end }}
+{{- if and (not .FOR_BUILDER) }}
+    hostname: {{ .SERVICE_NAME }}
+{{- end }}
+
+{{- /* ------------------------------------------------------------------- */ -}}
+{{- "" }}
+{{- if and (not .FOR_BUILDER)
+       (or (not .FOR_DEPLOYMENT)
+        .DEPENDS_ON
+         (and .DEPENDS_ON_FOR_DEPLOYMENT .FOR_DEPLOYMENT)) }}
+    depends_on:
+    {{- if not .FOR_DEPLOYMENT }}
+      - init
+    {{- end -}}
+  {{- if .DEPENDS_ON }}
+    {{- .DEPENDS_ON }}
+  {{- end -}}
+  {{- if and .DEPENDS_ON_FOR_DEPLOYMENT .FOR_DEPLOYMENT }}
+    {{- .DEPENDS_ON_FOR_DEPLOYMENT }}
+  {{- end -}}
+  {{- if and .DEPENDS_ON_FOR_LOCAL (not .FOR_DEPLOYMENT) }}
+    {{- .DEPENDS_ON_FOR_LOCAL }}
+  {{- end -}}
+{{- end }}
+
+{{- /* ------------------------------------------------------------------- */ -}}
+{{- "" }}
+{{- if and (not .FOR_BUILDER)
+       (or .ENVIRONMENT
+        (and .ENVIRONMENT_FOR_DEPLOYMENT .FOR_DEPLOYMENT)
+         (and .ENVIRONMENT_FOR_LOCAL (not .FOR_DEPLOYMENT))) }}
+    environment:
+  {{- if .ENVIRONMENT }}
+    {{- .ENVIRONMENT }}
+  {{- end -}}
+  {{- if and .ENVIRONMENT_FOR_DEPLOYMENT .FOR_DEPLOYMENT }}
+    {{- .ENVIRONMENT_FOR_DEPLOYMENT }}
+  {{- end -}}
+  {{- if and .ENVIRONMENT_FOR_LOCAL (not .FOR_DEPLOYMENT) }}
+    {{- .ENVIRONMENT_FOR_LOCAL }}
+  {{- end -}}
+{{- end }}
+
+{{- /* ------------------------------------------------------------------- */ -}}
+{{- "" }}
+{{- if and (not .FOR_BUILDER)
+       (or .PORTS
+        (and .PORTS_FOR_DEPLOYMENT .FOR_DEPLOYMENT)
+         (and .PORTS_FOR_LOCAL (not .FOR_DEPLOYMENT))) }}
+    ports:
+  {{- if .PORTS }}
+    {{- .PORTS }}
+  {{- end -}}
+  {{- if and .PORTS_FOR_DEPLOYMENT .FOR_DEPLOYMENT }}
+    {{- .PORTS_FOR_DEPLOYMENT }}
+  {{- end -}}
+  {{- if and .PORTS_FOR_LOCAL (not .FOR_DEPLOYMENT) }}
+    {{- .PORTS_FOR_LOCAL }}
+  {{- end -}}
+{{- end }}
+
+{{- /* ------------------------------------------------------------------- */ -}}
+{{- "" }}
+{{- if and (not .FOR_BUILDER)
+       (or .NETWORKS
+        (and .NETWORKS_FOR_DEPLOYMENT .FOR_DEPLOYMENT)
+         (and .NETWORKS_FOR_LOCAL (not .FOR_DEPLOYMENT))) }}
+    networks:
+  {{- if .NETWORKS }}
+    {{- .NETWORKS }}
+  {{- end -}}
+  {{- if and .NETWORKS_FOR_DEPLOYMENT .FOR_DEPLOYMENT }}
+    {{- .NETWORKS_FOR_DEPLOYMENT }}
+  {{- end -}}
+  {{- if and .NETWORKS_FOR_LOCAL (not .FOR_DEPLOYMENT) }}
+    {{- .NETWORKS_FOR_LOCAL }}
+  {{- end -}}
+{{- end }}
+
+{{- /* ------------------------------------------------------------------- */ -}}
+{{- "" }}
+{{- if and (not .FOR_BUILDER) }}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+  {{- if .VOLUMES }}
+    {{- .VOLUMES }}
+  {{- end -}}
+  {{- if and .VOLUMES_FOR_DEPLOYMENT .FOR_DEPLOYMENT }}
+    {{- .VOLUMES_FOR_DEPLOYMENT }}
+  {{- end }}
+  {{- if and .VOLUMES_FOR_LOCAL (not .FOR_DEPLOYMENT) }}
+    {{- .VOLUMES_FOR_LOCAL }}
+  {{- end }}
+{{- end }}
+
+{{- /* ------------------------------------------------------------------- */ -}}
+{{- "" }}
+{{- if and .INCLUDE_BUILD (or .BUILD (and .BUILD_FOR_DEPLOYMENT .FOR_BUILDER) (and .BUILD_FOR_LOCAL (not .FOR_BUILDER))) }}
+    build:
+  {{- if .BUILD }}
+    {{- .BUILD }}
+  {{- end -}}
+  {{- if and .BUILD_FOR_DEPLOYMENT .FOR_BUILDER }}
+    {{- .BUILD_FOR_DEPLOYMENT }}
+  {{- end -}}
+  {{- if and .BUILD_FOR_LOCAL (not .FOR_BUILDER) }}
+    {{- .BUILD_FOR_LOCAL }}
+  {{- end -}}
+{{- end -}}
+
+{{- /* ------------------------------------------------------------------- */ -}}
+{{- "" }}
+{{- if and .PROFILES (not .FOR_BUILDER) (not .FOR_DEPLOYMENT) }}
+    profiles:
+    {{- .PROFILES }}
+{{- end }}
+{{- end -}}

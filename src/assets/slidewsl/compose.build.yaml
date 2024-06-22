@@ -1,19 +1,14 @@
 # This file is auto-generated. Any changes made to this file will be lost.
-# Generated with the command: go run render.go --env-file /home/dave/slidewsl/_env/build.env --environment build --workspace-path /home/dave/slidewsl
+# Generated with the command: go run render.go --environment build --workspace-path /home/dave/slidewsl
 
 name: slidewsl-build
 
 networks:
-  php-fpm:
-  keydb:
-  mysql:
-  angular:
   builder-net:
 
 volumes:
   keydb:
   yarn-cache:
-  mysql:
 
 services:
 
@@ -21,8 +16,6 @@ services:
     image: ${REGISTRY-}deploy-build:${BUILD_TAG}
     deploy:
       replicas: 0
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
     build:
       context: node
       additional_contexts:
@@ -38,35 +31,17 @@ services:
 
   angular-ssr:
     image: ${REGISTRY-}deploy-angular-ssr:${BUILD_TAG}
-    hostname: angular-ssr
-    networks:
-      - angular
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
     build:
       context: node
-      target: angular-ssr
       args:
         - NODE_VERSION=$NODE_VERSION
         - NG_CLI_VERSION=$NG_CLI_VERSION
         - APP_NAME=${APP_NAME:-undefined}
         - BUILD_IMAGE=deploy-build:$BUILD_TAG
+      target: angular-ssr
 
   nginx:
     image: ${REGISTRY-}deploy-nginx:${BUILD_TAG}
-    hostname: nginx
-    environment:
-      EXTERNAL_WEB_PORT: ${EXTERNAL_WEB_PORT:-443}
-    ports:
-      - "0.0.0.0:${NGINX_SECURE_PORT:-443}:4430"
-    networks:
-      - php-fpm
-      - angular
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-    depends_on:
-      - angular-ssr
-      - php-fpm
     build:
       context: nginx
       additional_contexts:
@@ -77,18 +52,6 @@ services:
 
   php-fpm:
     image: ${REGISTRY-}deploy-php-fpm:${BUILD_TAG}
-    hostname: php-fpm
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-    environment:
-      PHP_INI_SCAN_DIR: /usr/local/etc/php/conf.d:/etc/php/conf.d
-    networks:
-      - php-fpm
-      - keydb
-      - mysql
-    depends_on:
-      - keydb-node1
-      - mysql
     build:
       context: php
       additional_contexts:
@@ -102,14 +65,6 @@ services:
 
   mysql:
     image: ${REGISTRY-}deploy-mysql:${BUILD_TAG}
-    hostname: mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=root
-    networks:
-      - mysql
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - mysql:/var/lib/mysql
     build:
       context: mysql
       additional_contexts:
@@ -120,15 +75,6 @@ services:
 
   phpmyadmin:
     image: ${REGISTRY-}deploy-phpmyadmin:${BUILD_TAG}
-    hostname: phpmyadmin
-    environment:
-      PMA_HOST: mysql
-    networks:
-      - mysql
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-    ports:
-      - "0.0.0.0:${PHPMYADMIN_PORT:-8080}:80"
     build:
       context: phpmyadmin
       additional_contexts:
@@ -136,17 +82,9 @@ services:
       target: deployable
       args:
         - CONF=conf.d
-    depends_on:
-      - mysql
 
   keydb-node1:
     image: ${REGISTRY-}deploy-keydb-node1:${BUILD_TAG}
-    hostname: keydb-node1
-    networks:
-      - keydb
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - keydb:/data
     build:
       context: keydb
       additional_contexts:
@@ -157,12 +95,6 @@ services:
 
   keydb-node2:
     image: ${REGISTRY-}deploy-keydb-node2:${BUILD_TAG}
-    hostname: keydb-node2
-    networks:
-      - keydb
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - keydb:/data
     build:
       context: keydb
       additional_contexts:
@@ -173,12 +105,6 @@ services:
 
   keydb-node3:
     image: ${REGISTRY-}deploy-keydb-node3:${BUILD_TAG}
-    hostname: keydb-node3
-    networks:
-      - keydb
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - keydb:/data
     build:
       context: keydb
       additional_contexts:

@@ -1,46 +1,36 @@
 {{- define "angular-ssr" }}
-  angular-ssr:
-  {{- if .FOR_DEPLOYMENT }}
-    image: ${REGISTRY-}deploy-angular-ssr:${BUILD_TAG}
-  {{- else }}
-    container_name: ${COMPOSE_PROJECT_NAME}-angular-ssr
-    user: "${WSL_UID}:${WSL_GID}"
-    environment:
-      APP: ${APP:-app-not-specified}
-  {{- end }}
-    hostname: angular-ssr
-    networks:
-      - angular
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-    {{- if not .FOR_DEPLOYMENT }}
+
+{{- template "_service" (merge .
+   "SERVICE_NAME" "angular-ssr"
+   "IMAGE" "${REGISTRY-}deploy-angular-ssr:${BUILD_TAG}"
+   "CONTAINER_NAME" "${COMPOSE_PROJECT_NAME}-angular-ssr"
+   "USER" "${WSL_UID}:${WSL_GID}"
+   "ENVIRONMENT_FOR_LOCAL" `
+      - APP={{ varOrValue "APP" .APP "app-not-specified" }}`
+   "NETWORKS" `
+      - angular`
+   "VOLUMES_FOR_LOCAL" `
       - ./nginx/templates:/etc/nginx/templates:ro
       - ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}:/app/angular
       - ${SLIDEWSL_LARAVEL_ROOT_IN_WSL}:/app/laravel
-      - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/app/webroot
-    profiles:
-      - angular-ssr
-    {{- end }}
-    {{- if not .FOR_DEPLOYMENT }}
-    depends_on:
-      - init
-    {{- end }}
-  {{- if .INCLUDE_BUILD }}
-    build:
+      - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/app/webroot`
+   "PROFILES" `
+      - angular-ssr`
+   "BUILD" `
       context: node
-    {{- if .FOR_DEPLOYMENT }}
-      target: angular-ssr
-    {{- else }}
-      target: dev-angular-ssr
-      additional_contexts:
-        shared: shared
-    {{- end }}
       args:
         - NODE_VERSION=$NODE_VERSION
         - NG_CLI_VERSION=$NG_CLI_VERSION
-      {{- if .FOR_DEPLOYMENT }}
+      {{- if .FOR_BUILDER }}
         - APP_NAME=${APP_NAME:-undefined}
         - BUILD_IMAGE=deploy-build:$BUILD_TAG
-      {{- end }}
-  {{- end -}}
+      {{- end }}`
+   "BUILD_FOR_DEPLOYMENT" `
+      target: angular-ssr`
+   "BUILD_FOR_LOCAL" `
+      additional_contexts:
+        shared: shared
+      target: dev-angular-ssr`
+) }}
+
 {{- end -}}

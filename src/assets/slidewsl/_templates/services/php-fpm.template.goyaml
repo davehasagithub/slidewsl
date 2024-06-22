@@ -1,14 +1,21 @@
-{{- define "php" }}
+{{- define "php-fpm" }}
 
 {{- template "_service" (merge .
-   "SERVICE_NAME" "php"
+   "SERVICE_NAME" "php-fpm"
+   "IMAGE" "${REGISTRY-}deploy-php-fpm:${BUILD_TAG}"
+   "CONTAINER_NAME" "${COMPOSE_PROJECT_NAME}-php-fpm"
    "USER" "${WSL_UID}:${WSL_GID}"
-   "PROFILES" `
-      - php`
+   "DEPENDS_ON" `
+      - keydb-node1
+      - mysql`
    "ENVIRONMENT" `
       - APP_ENV={{ varOrValue "APP_ENV" .APP_ENV "local" }}
       - PHP_INI_SCAN_DIR=/usr/local/etc/php/conf.d:/etc/php/conf.d`
+   "ENVIRONMENT_FOR_LOCAL" `
+      - WSL2_GATEWAY={{ varOrValue "WSL2_GATEWAY" .WSL2_GATEWAY "" }}`
    "NETWORKS" `
+      - php-fpm
+      - keydb
       - mysql`
    "VOLUMES_FOR_LOCAL" `
       - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/app/webroot
@@ -37,7 +44,7 @@
    "BUILD_FOR_DEPLOYMENT" `
       target: deployable`
    "BUILD_FOR_LOCAL" `
-      target: development`
+      target: php-fpm`
 ) }}
 
 {{- end -}}

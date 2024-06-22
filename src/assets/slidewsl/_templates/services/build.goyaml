@@ -3,8 +3,6 @@
     image: ${REGISTRY-}deploy-build:${BUILD_TAG}
     deploy:
       replicas: 0
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
     build:
       context: node
       additional_contexts:

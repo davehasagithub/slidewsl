@@ -29,25 +29,26 @@ services:
       - ./shared:/usr/local/bin/
       - /:/host
     environment:
-      SLIDEWSL_DB_ROOT_IN_WSL: ${SLIDEWSL_DB_ROOT_IN_WSL}
-      SLIDEWSL_ANGULAR_ROOT_IN_WSL: ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}
-      SLIDEWSL_LARAVEL_ROOT_IN_WSL: ${SLIDEWSL_LARAVEL_ROOT_IN_WSL}
-      SLIDEWSL_WEB_ROOT_IN_WSL: ${SLIDEWSL_WEB_ROOT_IN_WSL}
+      - SLIDEWSL_DB_ROOT_IN_WSL=${SLIDEWSL_DB_ROOT_IN_WSL}
+      - SLIDEWSL_ANGULAR_ROOT_IN_WSL=${SLIDEWSL_ANGULAR_ROOT_IN_WSL}
+      - SLIDEWSL_LARAVEL_ROOT_IN_WSL=${SLIDEWSL_LARAVEL_ROOT_IN_WSL}
+      - SLIDEWSL_WEB_ROOT_IN_WSL=${SLIDEWSL_WEB_ROOT_IN_WSL}
 
   angular:
     user: "${WSL_UID}:${WSL_GID}"
+    hostname: angular
+    depends_on:
+      - init
+    environment:
+      - NODE_VERSION=${NODE_VERSION}
+      - NG_CLI_VERSION=${NG_CLI_VERSION}
+      - SSR_ENABLED=${SSR_ENABLED:-true}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}:/app/angular
       - ./node/scripts:/usr/local/bin/angular-scripts/
       - ./node/conf:/usr/local/etc/angular/
       - yarn-cache:/home/node/.cache/yarn
-    depends_on:
-      - init
-    environment:
-      NODE_VERSION: ${NODE_VERSION}
-      NG_CLI_VERSION: ${NG_CLI_VERSION}
-      LOCAL_SSR_ENABLED: ${LOCAL_SSR_ENABLED:-false}
     build:
       context: node
       additional_contexts:
@@ -61,23 +62,23 @@ services:
 
   angular-dev-server:
     container_name: ${COMPOSE_PROJECT_NAME}-angular-dev-server
-    hostname: angular-dev-server
     user: "${WSL_UID}:${WSL_GID}"
+    hostname: angular-dev-server
+    depends_on:
+      - init
+    environment:
+      - APPS=${APPS:-apps-not-specified}
+      - CONF_FILENAME=${CONF_FILENAME:-dev-server.conf}
+      - NODE_VERSION=${NODE_VERSION}
+      - NG_CLI_VERSION=${NG_CLI_VERSION}
+    networks:
+      - angular
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}:/app/angular
       - ./node/scripts:/usr/local/bin/angular-scripts/
       - ./node/conf:/usr/local/etc/angular/
       - yarn-cache:/home/node/.cache/yarn
-    depends_on:
-      - init
-    environment:
-      APPS: ${APPS:-app-not-specified}
-      CONF_FILENAME: ${CONF_FILENAME:-dev-server.conf}
-      NODE_VERSION: ${NODE_VERSION}
-      NG_CLI_VERSION: ${NG_CLI_VERSION}
-    networks:
-      - angular
     build:
       context: node
       additional_contexts:
@@ -91,6 +92,14 @@ services:
 
   php:
     user: "${WSL_UID}:${WSL_GID}"
+    hostname: php
+    depends_on:
+      - init
+    environment:
+      - APP_ENV=${APP_ENV:-local}
+      - PHP_INI_SCAN_DIR=/usr/local/etc/php/conf.d:/etc/php/conf.d
+    networks:
+      - mysql
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/app/webroot
@@ -98,8 +107,6 @@ services:
       - ./php/scripts:/usr/local/bin/php-scripts/
       - ./php/conf:/etc/php/conf.d/
       - ./php/etc:/etc/php_extras/
-    depends_on:
-      - init
     build:
       context: php
       additional_contexts:
@@ -133,9 +140,11 @@ services:
   angular-ssr:
     container_name: ${COMPOSE_PROJECT_NAME}-angular-ssr
     user: "${WSL_UID}:${WSL_GID}"
-    environment:
-      APP: ${APP:-app-not-specified}
     hostname: angular-ssr
+    depends_on:
+      - init
+    environment:
+      - APP=${APP:-app-not-specified}
     networks:
       - angular
     volumes:
@@ -144,26 +153,27 @@ services:
       - ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}:/app/angular
       - ${SLIDEWSL_LARAVEL_ROOT_IN_WSL}:/app/laravel
       - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/app/webroot
-    profiles:
-      - angular-ssr
-    depends_on:
-      - init
     build:
       context: node
-      target: dev-angular-ssr
-      additional_contexts:
-        shared: shared
       args:
         - NODE_VERSION=$NODE_VERSION
         - NG_CLI_VERSION=$NG_CLI_VERSION
+      additional_contexts:
+        shared: shared
+      target: dev-angular-ssr
+    profiles:
+      - angular-ssr
 
   nginx:
     container_name: ${COMPOSE_PROJECT_NAME}-nginx
     user: "${WSL_UID}:${WSL_GID}"
     hostname: nginx
+    depends_on:
+      - init
+      - php-fpm
     environment:
-      EXTERNAL_WEB_PORT: ${EXTERNAL_WEB_PORT:-443}
-      LOCAL_SSR_ENABLED: ${LOCAL_SSR_ENABLED:-false}
+      - EXTERNAL_WEB_PORT=${EXTERNAL_WEB_PORT:-443}
+      - SSR_ENABLED=${SSR_ENABLED:-true}
     ports:
       - "0.0.0.0:${NGINX_SECURE_PORT:-443}:4430"
       - "0.0.0.0:${ANGULAR_DEV_SERVER_PORT_RANGE:-4200-4210}:4200-4210"
@@ -176,9 +186,6 @@ services:
       - ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}:/app/angular
       - ${SLIDEWSL_LARAVEL_ROOT_IN_WSL}:/app/laravel
       - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/app/webroot
-    depends_on:
-      - init
-      - php-fpm
     build:
       context: nginx
       additional_contexts:
@@ -189,6 +196,18 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME}-php-fpm
     user: "${WSL_UID}:${WSL_GID}"
     hostname: php-fpm
+    depends_on:
+      - init
+      - keydb-node1
+      - mysql
+    environment:
+      - APP_ENV=${APP_ENV:-local}
+      - PHP_INI_SCAN_DIR=/usr/local/etc/php/conf.d:/etc/php/conf.d
+      - WSL2_GATEWAY=${WSL2_GATEWAY}
+    networks:
+      - php-fpm
+      - keydb
+      - mysql
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/app/webroot
@@ -196,16 +215,6 @@ services:
       - ./php/scripts:/usr/local/bin/php-scripts/
       - ./php/conf:/etc/php/conf.d/
       - ./php/etc:/etc/php_extras/
-    environment:
-      PHP_INI_SCAN_DIR: /usr/local/etc/php/conf.d:/etc/php/conf.d
-      WSL2_GATEWAY: ${WSL2_GATEWAY}
-    networks:
-      - php-fpm
-      - keydb
-      - mysql
-    depends_on:
-      - keydb-node1
-      - mysql
     build:
       context: php
       additional_contexts:
@@ -224,9 +233,9 @@ services:
   mysql:
     container_name: ${COMPOSE_PROJECT_NAME}-mysql
     user: "${WSL_UID}:${WSL_GID}"
+    hostname: mysql
     depends_on:
       - init
-    hostname: mysql
     environment:
       - MYSQL_ROOT_PASSWORD=root
     networks:
@@ -246,29 +255,32 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME}-phpmyadmin
     user: "${WSL_UID}:${WSL_GID}"
     hostname: phpmyadmin
+    depends_on:
+      - init
+      - mysql
     environment:
-      PMA_HOST: mysql
-      PMA_USER: ${PMA_USER}
-      PMA_PASSWORD: ${PMA_PASSWORD}
+      - PMA_HOST=mysql
+      - PMA_USER=${PMA_USER:-root}
+      - PMA_PASSWORD=${PMA_PASSWORD:-root}
+    ports:
+      - "0.0.0.0:${PHPMYADMIN_PORT:-8080}:80"
     networks:
       - mysql
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ./phpmyadmin/conf.d:/etc/phpmyadmin/conf.d
-    ports:
-      - "0.0.0.0:${PHPMYADMIN_PORT:-8080}:80"
     build:
       context: phpmyadmin
       additional_contexts:
         shared: shared
       target: development
-    depends_on:
-      - mysql
 
   keydb-node1:
     container_name: ${COMPOSE_PROJECT_NAME}-keydb-node1
     user: "${WSL_UID}:${WSL_GID}"
     hostname: keydb-node1
+    depends_on:
+      - init
     networks:
       - keydb
     volumes:
@@ -285,6 +297,8 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME}-keydb-node2
     user: "${WSL_UID}:${WSL_GID}"
     hostname: keydb-node2
+    depends_on:
+      - init
     networks:
       - keydb
     volumes:
@@ -301,6 +315,8 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME}-keydb-node3
     user: "${WSL_UID}:${WSL_GID}"
     hostname: keydb-node3
+    depends_on:
+      - init
     networks:
       - keydb
     volumes:

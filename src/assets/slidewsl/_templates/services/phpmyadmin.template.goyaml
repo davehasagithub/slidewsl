@@ -1,40 +1,33 @@
 {{- define "phpmyadmin" }}
-  phpmyadmin:
-  {{- if .FOR_DEPLOYMENT }}
-    image: ${REGISTRY-}deploy-phpmyadmin:${BUILD_TAG}
-  {{- else }}
-    container_name: ${COMPOSE_PROJECT_NAME}-phpmyadmin
-    user: "${WSL_UID}:${WSL_GID}"
-  {{- end }}
-    hostname: phpmyadmin
-    environment:
-      PMA_HOST: mysql
-  {{- if not .FOR_DEPLOYMENT }}
-      PMA_USER: ${PMA_USER}
-      PMA_PASSWORD: ${PMA_PASSWORD}
-  {{- end }}
-    networks:
-      - mysql
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-    {{- if not .FOR_DEPLOYMENT }}
-      - ./phpmyadmin/conf.d:/etc/phpmyadmin/conf.d
-    {{- end }}
-    ports:
-      - "0.0.0.0:${PHPMYADMIN_PORT:-8080}:80"
-  {{- if .INCLUDE_BUILD }}
-    build:
+
+{{- template "_service" (merge .
+   "SERVICE_NAME" "phpmyadmin"
+   "IMAGE" "${REGISTRY-}deploy-phpmyadmin:${BUILD_TAG}"
+   "CONTAINER_NAME" "${COMPOSE_PROJECT_NAME}-phpmyadmin"
+   "USER" "${WSL_UID}:${WSL_GID}"
+   "DEPENDS_ON" `
+      - mysql`
+   "ENVIRONMENT" `
+      - PMA_HOST=mysql`
+   "ENVIRONMENT_FOR_LOCAL" `
+      - PMA_USER={{ varOrValue "PMA_USER" .PMA_USER "root" }}
+      - PMA_PASSWORD={{ varOrValue "PMA_PASSWORD" .PMA_PASSWORD "root" }}`
+   "PORTS" `
+      - "0.0.0.0:{{ varOrValue "PHPMYADMIN_PORT" .PHPMYADMIN_PORT "8080" }}:80"`
+   "NETWORKS" `
+      - mysql`
+   "VOLUMES_FOR_LOCAL" `
+      - ./phpmyadmin/conf.d:/etc/phpmyadmin/conf.d`
+   "BUILD" `
       context: phpmyadmin
       additional_contexts:
-        shared: shared
-    {{- if .FOR_DEPLOYMENT }}
+        shared: shared`
+   "BUILD_FOR_DEPLOYMENT" `
       target: deployable
       args:
-        - CONF=conf.d
-    {{- else }}
-      target: development
-    {{- end -}}
-  {{- end }}
-    depends_on:
-      - mysql
+        - CONF=conf.d`
+   "BUILD_FOR_LOCAL" `
+      target: development`
+) }}
+
 {{- end -}}

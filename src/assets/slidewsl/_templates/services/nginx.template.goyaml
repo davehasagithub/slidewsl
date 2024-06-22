@@ -1,51 +1,39 @@
 {{- define "nginx" }}
-  nginx:
-  {{- if .FOR_DEPLOYMENT }}
-    image: ${REGISTRY-}deploy-nginx:${BUILD_TAG}
-  {{- else }}
-    container_name: ${COMPOSE_PROJECT_NAME}-nginx
-    user: "${WSL_UID}:${WSL_GID}"
-  {{- end }}
-    hostname: nginx
-    environment:
-      EXTERNAL_WEB_PORT: ${EXTERNAL_WEB_PORT:-443}
-    {{- if not .FOR_DEPLOYMENT }}
-      LOCAL_SSR_ENABLED: ${LOCAL_SSR_ENABLED:-false}
-    {{- end }}
-    ports:
-      - "0.0.0.0:${NGINX_SECURE_PORT:-443}:4430"
-    {{- if not .FOR_DEPLOYMENT }}
-      - "0.0.0.0:${ANGULAR_DEV_SERVER_PORT_RANGE:-4200-4210}:4200-4210"
-    {{- end }}
-    networks:
+
+{{- template "_service" (merge .
+   "SERVICE_NAME" "nginx"
+   "IMAGE" "${REGISTRY-}deploy-nginx:${BUILD_TAG}"
+   "CONTAINER_NAME" "${COMPOSE_PROJECT_NAME}-nginx"
+   "USER" "${WSL_UID}:${WSL_GID}"
+   "DEPENDS_ON" `
+      - php-fpm`
+   "DEPENDS_ON_FOR_DEPLOYMENT" `
+      - angular-ssr`
+   "ENVIRONMENT" `
+      - EXTERNAL_WEB_PORT={{ varOrValue "EXTERNAL_WEB_PORT" .EXTERNAL_WEB_PORT "443" }}
+      - SSR_ENABLED={{ varOrValue "SSR_ENABLED" .SSR_ENABLED "true" }}`
+   "PORTS" `
+      - "0.0.0.0:{{ varOrValue "NGINX_SECURE_PORT" .NGINX_SECURE_PORT "443" }}:4430"`
+   "PORTS_FOR_LOCAL" `
+      - "0.0.0.0:${ANGULAR_DEV_SERVER_PORT_RANGE:-4200-4210}:4200-4210"`
+   "NETWORKS" `
       - php-fpm
-      - angular
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-    {{- if not .FOR_DEPLOYMENT }}
+      - angular`
+   "VOLUMES_FOR_LOCAL" `
       - ./nginx/templates:/etc/nginx/templates:ro
       - ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}:/app/angular
       - ${SLIDEWSL_LARAVEL_ROOT_IN_WSL}:/app/laravel
-      - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/app/webroot
-    {{- end }}
-    depends_on:
-    {{- if not .FOR_DEPLOYMENT }}
-      - init
-    {{- else }}
-      - angular-ssr
-    {{- end }}
-      - php-fpm
-  {{- if .INCLUDE_BUILD }}
-    build:
+      - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/app/webroot`
+   "BUILD" `
       context: nginx
       additional_contexts:
-        shared: shared
-    {{- if .FOR_DEPLOYMENT }}
+        shared: shared`
+   "BUILD_FOR_DEPLOYMENT" `
       target: deployable
       args:
-        - BUILD_IMAGE=deploy-build:$BUILD_TAG
-    {{- else }}
-      target: development
-    {{- end -}}
-  {{- end -}}
+        - BUILD_IMAGE=deploy-build:$BUILD_TAG`
+   "BUILD_FOR_LOCAL" `
+      target: development`
+) }}
+
 {{- end -}}

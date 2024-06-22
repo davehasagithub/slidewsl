@@ -1,15 +1,19 @@
-{{- define "angular" }}
+{{- define "angular-dev-server" }}
 
 {{- template "_service" (merge .
-   "SERVICE_NAME" "angular"
-   "IMAGE" "${REGISTRY-}deploy-angular:${BUILD_TAG}"
+   "SERVICE_NAME" "angular-dev-server"
+   "IMAGE" "${REGISTRY-}deploy-angular-dev-server:${BUILD_TAG}"
+   "CONTAINER_NAME" "${COMPOSE_PROJECT_NAME}-angular-dev-server"
    "USER" "${WSL_UID}:${WSL_GID}"
    "PROFILES" `
-      - angular`
+      - angular-dev-server`
    "ENVIRONMENT" `
+      - APPS={{ varOrValue "APPS" .APPS "apps-not-specified" }}
+      - CONF_FILENAME={{ varOrValue "CONF_FILENAME" .CONF_FILENAME "dev-server.conf" }}
       - NODE_VERSION={{ varOrValue "NODE_VERSION" .NODE_VERSION "" }}
-      - NG_CLI_VERSION={{ varOrValue "NG_CLI_VERSION" .NG_CLI_VERSION "" }}
-      - SSR_ENABLED={{ varOrValue "SSR_ENABLED" .SSR_ENABLED "true" }}`
+      - NG_CLI_VERSION={{ varOrValue "NG_CLI_VERSION" .NG_CLI_VERSION "" }}`
+   "NETWORKS" `
+      - angular`
    "VOLUMES" `
       - ${SLIDEWSL_ANGULAR_ROOT_IN_WSL}:/app/angular
       - ./node/scripts:/usr/local/bin/angular-scripts/
@@ -28,7 +32,7 @@
    "BUILD_FOR_DEPLOYMENT" `
       target: deployable`
    "BUILD_FOR_LOCAL" `
-      target: development`
+      target: dev_server`
 ) }}
 
 {{- end -}}
