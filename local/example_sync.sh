@@ -13,7 +13,7 @@ root=/mnt/c/users/dave/Desktop/git/slidewsl
   cp -a $root/local/cert.* ~/slidewsl/nginx/certs
 
   go run ~/slidewsl/_templates/cmd/render.go --env-file ~/slidewsl/_env/local.env --environment local --workspace-path ~/slidewsl; \
-  go run ~/slidewsl/_templates/cmd/render.go --env-file ~/slidewsl/_env/build.env --environment build --workspace-path ~/slidewsl; \
+  go run ~/slidewsl/_templates/cmd/render.go --environment build --workspace-path ~/slidewsl; \
   go run ~/slidewsl/_templates/cmd/render.go --env-file ~/slidewsl/_env/staging.env --environment staging --workspace-path ~/slidewsl; \
   cp ~/slidewsl/compose*.yaml $root/src/assets/slidewsl/
 

@@ -18,24 +18,27 @@ func main() {
 
 	flag.Parse()
 
-	if *envFilePath == "" || *environment == "" || *workspacePath == "" {
-		fmt.Println("Usage: go run render.go --env-file ~/path/to/some.env --environment local --workspace-path ~/path/to/workspace")
+	if *environment == "" || *workspacePath == "" {
+		fmt.Println("Usage: go run render.go [--env-file ~/path/to/some.env] --environment local --workspace-path ~/path/to/workspace")
 		return
 	}
 
-	envMap, err := LoadEnv(*envFilePath)
-	if err != nil {
-		fmt.Printf("Error loading .env file: %v\n", err)
-		return
+	envMap := make(map[string]string)
+	if *envFilePath != "" {
+		var err error
+		envMap, err = LoadEnv(*envFilePath)
+		if err != nil {
+			fmt.Printf("Error loading .env file: %v\n", err)
+			return
+		}
 	}
-	//fmt.Println("Loaded environment variables:", envMap)
 
-	envMap["ENVIRONMENT"] = *environment
+	envMap["ENV"] = *environment
 
 	if stringInSlice(*environment, []string{"local", "build"}) {
 		envMap["INCLUDE_BUILD"] = "true"
 		if stringInSlice(*environment, []string{"build"}) {
-			envMap["FOR_DEPLOYMENT"] = "true"
+			envMap["FOR_BUILDER"] = "true"
 		}
 	} else {
 		envMap["FOR_DEPLOYMENT"] = "true"
@@ -43,17 +46,33 @@ func main() {
 
 	templ := template.New("main")
 	funcMap := template.FuncMap{
-		"merge": merge,
-		"dict": func(initial map[string]string, values ...interface{}) (map[string]string, error) {
-			return dict(templ, initial, envMap, values...)
+		"merge": func(initial map[string]string, values ...interface{}) (map[string]string, error) {
+			return merge(templ, initial, values...)
 		},
-		"varOrValue": func(key string, fixedValue string, defaultValue string) string {
-			return varOrValue(*environment, key, fixedValue, defaultValue)
+		"varOrValue": func(key string, varValue interface{}, defaultValue interface{}) string {
+			var defValue string
+			if defaultValue == nil {
+				defValue = ""
+			} else {
+				defValue = defaultValue.(string)
+			}
+			var strValue string
+			if varValue == nil {
+				strValue = ""
+			} else {
+				strValue = varValue.(string)
+			}
+			return varOrValue(*environment, key, strValue, defValue)
 		},
 	}
 
 	outputFile := generateOutputFilename(*environment, "compose")
-	commandString := fmt.Sprintf("go run render.go --env-file %s --environment %s --workspace-path %s", *envFilePath, *environment, *workspacePath)
+	var commandString string
+	if *envFilePath != "" {
+		commandString = fmt.Sprintf("go run render.go --env-file %s --environment %s --workspace-path %s", *envFilePath, *environment, *workspacePath)
+	} else {
+		commandString = fmt.Sprintf("go run render.go --environment %s --workspace-path %s", *environment, *workspacePath)
+	}
 	fmt.Printf("\nRendering %s.\n", outputFile)
 
 	tmpl, err := templ.Funcs(funcMap).ParseFiles(getAllTemplates(*workspacePath)...)
@@ -157,31 +176,26 @@ func processTemplate(tmpl *template.Template, workspacePath, templateName, outpu
 	return nil
 }
 
-// Merge original data with additional values
-func merge(data map[string]string, additional map[string]string) map[string]string {
-	merged := make(map[string]string)
-	for k, v := range data {
-		merged[k] = v
-	}
-	for k, v := range additional {
-		merged[k] = v
-	}
-	return merged
-}
-
 // Dict creates a map from a list of key-value pairs with interpolation.
-func dict(tmpl *template.Template, dict map[string]string, data map[string]string, values ...interface{}) (map[string]string, error) {
+func merge(tmpl *template.Template, originalDict map[string]string, values ...interface{}) (map[string]string, error) {
 	if len(values)%2 != 0 {
-		return nil, fmt.Errorf("invalid dict call, odd number of arguments")
+		return nil, fmt.Errorf("invalid merge call, odd number of arguments")
 	}
+
+	// Create a copy of the original dictionary to avoid modifying it.
+	newDict := make(map[string]string)
+	for k, v := range originalDict {
+		newDict[k] = v
+	}
+
 	for i := 0; i < len(values); i += 2 {
 		key, ok := values[i].(string)
 		if !ok {
-			return nil, fmt.Errorf("dict keys must be strings")
+			return nil, fmt.Errorf("merge keys must be strings")
 		}
 		tmplStr, ok := values[i+1].(string)
 		if !ok {
-			return nil, fmt.Errorf("dict values must be strings")
+			return nil, fmt.Errorf("merge values must be strings")
 		}
 
 		// Interpolate template string
@@ -194,14 +208,14 @@ func dict(tmpl *template.Template, dict map[string]string, data map[string]strin
 		if err != nil {
 			return nil, err
 		}
-		err = tmpl.Execute(&buf, data)
+		err = tmpl.Execute(&buf, originalDict)
 		if err != nil {
 			return nil, err
 		}
 
-		dict[key] = buf.String()
+		newDict[key] = buf.String()
 	}
-	return dict, nil
+	return newDict, nil
 }
 
 // VarOrValue returns an environment variable value if the environment is "local", otherwise returns the fixed value.
@@ -211,6 +225,9 @@ func varOrValue(env string, key string, fixedValue string, defaultValue string) 
 			return fmt.Sprintf("${%s:-%s}", key, defaultValue)
 		}
 		return fmt.Sprintf("${%s}", key)
+	}
+	if fixedValue == "" && defaultValue != "" {
+		fixedValue = defaultValue
 	}
 	return fixedValue
 }
