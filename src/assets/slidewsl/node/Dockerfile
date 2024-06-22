@@ -57,6 +57,7 @@ RUN mkdir -p /app/angular /app/laravel /app/webroot && chown -R node:node /app
 ARG APP_NAME=${APP_NAME:-undefined}
 ARG BASE_HREF=/
 COPY --from=angular --chown=node:node package.json yarn.lock /app/angular/
+WORKDIR /app/angular
 RUN yarn install --frozen-lockfile
 COPY --from=angular --chown=node:node . /app/angular/
 RUN echo appname $APP_NAME
