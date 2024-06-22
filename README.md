@@ -26,7 +26,7 @@ using Go Templates. These templates are used to create configurations for
 both local and Swarm deployable environments.
 
 A lightweight _staging_ container is included with its own Docker Engine.
-By place this in Swarm mode, and pulling from a local registry, we can
+By placing this in Swarm mode, and pulling from a local registry, we can
 simulate and test deployments on the developer machine.
 
 In order to give the developer full control, this project aims to
