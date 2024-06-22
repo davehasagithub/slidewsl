@@ -1,6 +1,12 @@
 
 ---
 
+**06/22/2024**
+
+- Use a shared template to create service entries in the Compose YAML.
+  This moves tons of conditionals out of individual services,
+  and sets things up for further cleanup.
+
 **06/16/2024**
 
 - Generate Compose YAML files from Go Templates

@@ -341,6 +341,22 @@ docker context use default
 ```
 </details>
 
+<details>
+<summary>Redeploy</summary>
+
+Now that the registry and staging containers are up, this only requires a subset of steps:
+
+```bash
+dev sync
+docker context use default
+export TAG=my-tag02
+# build the build image and the rest
+# tag and push
+docker context use staging
+REGISTRY=registry:5000/ BUILD_TAG=$TAG docker stack deploy -d -c ~/slidewsl/compose.staging.yaml my-stack
+docker context use default
+```
+</details>
 
 
 
@@ -367,7 +383,9 @@ docker context use default
 - How can I use Angular SSR locally?
 
   Both the older ssr-dev-server builder (`serve-ssr`) and the newer unified dev server
-  will work great as-is. Be sure to adjust your angular.json and the dev-server.conf
+  will work great as-is.
+  (The former currently works better because of [26323](https://github.com/angular/angular-cli/issues/26323)).
+  Be sure to adjust your angular.json and the dev-server.conf
   command as needed.
 
   The tricky part is when testing our app in a way that more closely resembles production.
@@ -375,12 +393,40 @@ docker context use default
   But, if you'd like to test in the local dev environment,
   here's a summary of the steps to get you started:
 
-  - Set `LOCAL_SSR_ENABLED` to true in local.env.
+  - Set `SSR_ENABLED` to true in local.env.
     (If using the sync script approach, be sure to sync this change.)
   - Create a _new_ starter app and hosts entry as described in the walkthrough: `docker compose run --rm angular starter example2`.
   - Restart nginx: `docker compose up -d --force-recreate nginx`.
   - Launch the ssr container: `APP=example2 docker compose up -d --force-recreate angular-ssr`.
   - If you see gateway errors, ensure the ssr container is running and the domain name matches the project/dist folder name.
+
+- Woah! Where's my disk space?!
+
+  This stuff uses a ton.
+  Simply deleting containers and images (such as using `dev reset`) won't cause WSL2
+  to release the space.
+  You could export/import your WSL2 instance in order to move it to a larger disk.
+  You could also recreate the whole thing (getslidewsl.bat).
+  Short of that, you'll need to stop your containers (`docker compose --profile "*" down -v` and any others),
+  exit IntelliJ,
+  unmount the disk image (`sudo systemctl stop disk-image`),
+  and shut down WSL2 (`wsl --shutdown`).
+  Then, find your VHD, for example:
+
+  `C:\Users\<YourUsername>\AppData\Local\Packages\<DistroPackage>\LocalState\ext4.vhdx`
+
+  (The distro package might include OracleAmericaInc.)
+
+  Now use diskpart (at your own risk!):
+
+  ```
+  diskpart
+  select vdisk file="<path_to>\ext4.vhdx"
+  attach vdisk readonly
+  compact vdisk
+  detach vdisk
+  exit
+  ```
 
 ### IntelliJ
 
@@ -394,7 +440,7 @@ switch between them to pick up where you left off (you must log out of XFCE to u
    (see [530](https://github.com/microsoft/wslg/issues/530), [166](https://github.com/microsoft/wslg/issues/166)).
    To install JetBrains Toolbox, run `/opt/jetbrains-toolbox-2.2.1.19765/jetbrains-toolbox`.
    Afterward, use `~/.local/share/JetBrains/Toolbox/bin/jetbrains-toolbox >/dev/null 2>&1 &`.
-   To launch IntelliJ directly, `find . -name ~/idea.sh` will show the file to launch, such as:
+   To launch IntelliJ directly, `find ~/. -name idea.sh` will show the file to launch, such as:
    `~/.local/share/JetBrains/idea-IU-241.17890.1/bin/idea.sh >/dev/null 2>&1 &` or
    `~/.local/share/JetBrains/Toolbox/apps/intellij-idea-ultimate/bin/idea.sh >/dev/null 2>&1 &`.
    Tip: Exit using the Quit menu option instead of clicking X.
@@ -415,22 +461,34 @@ switch between them to pick up where you left off (you must log out of XFCE to u
 
 #### Settings
 
-These are suggested IntelliJ settings. After applying, consider exporting your settings to the disk image (or to your JetBrains account) so they can be imported when recreating the WSL2 instance:
+These are suggested IntelliJ settings. After applying, consider exporting your settings to the disk image under /mnt/slidewsl (or to your JetBrains account) so they can be imported when recreating the WSL2 instance:
 
 - `File | Settings | Plugins`
-  - Install PHP, PHP Docker, PHP Remote Interpreter, GitToolBox, Blade
+  - Install PHP, PHP Docker, GitToolBox, Blade
 - `File | Settings | Languages & Frameworks | PHP`
   - Set the language level
-  - Set CLI interpreter to Remote, Docker, `slidewsl-php:latest` (if it's not there, run `docker compose build php`)
+  - Set CLI interpreter:
+    - Add a new entry "From Docker"
+    - Select the "Docker Compose" radio button
+    - Set the configuration file to `/home/{name}/slidewsl/compose.local.yaml` (update the name)
+    - Set the service to "php", with "always start a new container"
+    - Note that older versions of IntelliJ had problems using Compose
+  - Set path mappings (for phpunit tests):
+    - Map your local project path (the value of SLIDEWSL_LARAVEL_ROOT_IN_WSL) to /app/laravel
 - `File | Settings | Languages & Frameworks | Node.js`
-  - Set Node interpreter to Remote, Docker, `slidewsl-angular:latest` (if not there, run `docker compose build angular`)
-- `File | Settings | Languages & Frameworks | PHP | Quality Tools | PHP CS Fixer`
-  - Use `slidewsl-php:latest` with path `/tools/vendor/friendsofphp/php-cs-fixer/php-cs-fixer`
-- `File | Settings | Languages & Frameworks | PHP | Servers`
-  - Map the value of `SLIDEWSL_LARAVEL_ROOT_IN_WSL` to `/laravel`.
+  - Set Node interpreter:
+    - Add a new remote entry
+    - Docker Compose
+    - Configuration file `/home/{name}/slidewsl/compose.local.yaml`
+    - Set service "angular"
 - `File | Settings | Languages & Frameworks | TypeScript`
   - Use types from server
-- Fix File Manager:
+  - Set Node interpreter, choose the entry from above: docker-compose://[compose.local.yaml]:angular/node
+- `File | Settings | Languages & Frameworks | PHP | Quality Tools | PHP CS Fixer`
+  - Be sure to set to "on" and choose "php" (as created above) with path `/tools/vendor/friendsofphp/php-cs-fixer/php-cs-fixer`
+- `File | Settings | Languages & Frameworks | PHP | Servers`
+  - Map the value of SLIDEWSL_LARAVEL_ROOT_IN_WSL to `/laravel`
+- Fix for launching Windows Explorer from WSLg:
   - Run: `sudo sh -c 'echo "/mnt/c/Windows/explorer.exe \\\\\\\\wsl\\\$\\\\OracleLinux_8_7\"\$1\" &" > /sbin/explorer && chmod +x /sbin/explorer'`
   - Run: `xfce4-mime-settings &`
   - Under Utilities, set File Manager to ("Other...") `/sbin/explorer "%s"`
@@ -452,15 +510,16 @@ These are other kinds of settings you may want to review:
 - `File | Settings | Editor | General | Editor Tabs`
   - Tab limit: 50 (?)
 - `File | Settings | Keymap`
-  - "Switcher", add Alt+D
-  - "Close tab", add Ctrl+Alt+W
-  - "Show in explorer" (file manager), Ctrl+Alt+Shift+E
-  - "Show history" (version control systems), Alt+Shift+Y
-  - "Next occurrence of the word at caret", Ctrl+F3
-  - "Move to next occurrence", Ctrl+K
-  - "Move to previous occurrence", Ctrl+Shift+K
-  - "Go to declaration and usages" (mouse shortcut), Middle-Click
-  - "Show Source" (main Menu, view), remove Ctrl+Enter
+  - Choose a predefined base, such as Windows, then customize:
+    - "Switcher", add Alt+D
+    - "Close tab", add Ctrl+Alt+W
+    - "Show in explorer" (file manager), Ctrl+Alt+Shift+E
+    - "Show history" (version control systems), Alt+Shift+Y
+    - "Next occurrence of the word at caret", Ctrl+F3
+    - "Move to next occurrence", Ctrl+K
+    - "Move to previous occurrence", Ctrl+Shift+K
+    - "Go to declaration and usages" (mouse shortcut), Middle-Click
+    - "Show Source" (main Menu, view), remove Ctrl+Enter
 - `File | Settings | Editor | General | Smart Keys`
   - Use CamelHumps words [check]
   - Honor CamelHumps words settings [uncheck]
