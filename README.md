@@ -8,26 +8,26 @@ development environment with support for Docker Swarm deployment.
 The development environment runs on WSL2 and is installed using just a
 **single DOS batch file** that runs from CMD without user interaction [^1].
 
-A sparse virtual hard disk image is mounted into the instance (using qemu-img
+A sparse virtual hard **disk image** is mounted into the instance (using qemu-img
 in the qcow2 format); this can be disconnected, backed up, the WSL2 instance
 rebuilt, and then reattached without loss of project files.
 
-A lightweight XFCE desktop is accessible by connecting to _localhost_ from
+A lightweight **XFCE desktop** is accessible by connecting to _localhost_ from
 a remote desktop client.
 
 The particular dev environment included here is an opinionated stack
-using nginx, Angular (with server-side rendering support), PHP/Laravel,
-KeyDB, MySQL, and phpMyAdmin. Customizations can be easily applied
+using **nginx**, **Angular** (with server-side rendering support), **PHP/Laravel**,
+**KeyDB**, **MySQL**, and **phpMyAdmin**. Customizations can be easily applied
 through a script that syncs the SlideWSL repo and ./local folders
 from the host to the WSL2 instance.
 
 Containers are managed by Docker Compose with YAML files that are generated
-using Go Templates. These templates are used to create configurations for
-both local and Swarm deployable environments.
+using **Go Templates**. These templates are used to create configurations for
+both local and **Swarm deployable** environments.
 
 A lightweight _staging_ container is included with its own Docker Engine.
 By placing this in Swarm mode, and pulling from a local registry, we can
-simulate and test deployments on the developer machine.
+simulate and **test deployments** on the developer machine.
 
 In order to give the developer full control, this project aims to
 provision the WSL2 distro on-demand and build all images locally.
