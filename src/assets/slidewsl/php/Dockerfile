@@ -34,6 +34,10 @@ FROM base as development-base
 
 ARG COMPOSER_HASH
 ARG COMPOSER_VERSION
+ARG XDEBUG_VERSION
+
+RUN pecl install xdebug-${XDEBUG_VERSION} \
+	&& docker-php-ext-enable xdebug
 
 COPY --from=shared add-fixuid.sh /usr/local/bin
 RUN add-fixuid.sh php php
@@ -45,13 +49,9 @@ RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
 FROM development-base as development
 
-ARG XDEBUG_VERSION
 ARG PHP_CS_FIXER_VERSION
 ARG PHP_STAN_VERSION
 ARG PSALM_VERSION
-
-RUN pecl install xdebug-${XDEBUG_VERSION} \
-	&& docker-php-ext-enable xdebug
 
 RUN mkdir -p /tools \
     && composer require --working-dir=/tools friendsofphp/php-cs-fixer:${PHP_CS_FIXER_VERSION} phpstan/phpstan:${PHP_STAN_VERSION} vimeo/psalm:${PSALM_VERSION} --no-interaction
