@@ -31,7 +31,7 @@ RUN --mount=type=cache,sharing=locked,target=/var/cache/apt \
 COPY ./scripts/chromium.sh /usr/local/bin/chromium.sh
 
 ENV CHROME_BIN="/usr/local/bin/chromium.sh"
-
+WORKDIR /app/angular
 ENTRYPOINT ["fixuid", "entrypoint.sh"]
 
 FROM development-base as dev_server
@@ -40,7 +40,7 @@ ENTRYPOINT ["/bin/bash", "-c", "fixuid prepare-node-modules.sh run-dev-server.sh
 EXPOSE 4300-4310
 
 FROM development-base AS dev-angular-ssr
-WORKDIR /app
+WORKDIR /app/angular
 USER node
 ENTRYPOINT ["/bin/bash", "-c", "fixuid node /app/angular/dist/\"${APP}\"/server/server.mjs /app/angular/dist/\"${APP}\"/server"]
 
