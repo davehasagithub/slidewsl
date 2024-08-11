@@ -99,6 +99,7 @@ services:
       - APP_ENV=${APP_ENV:-local}
       - PHP_INI_SCAN_DIR=/usr/local/etc/php/conf.d:/etc/php/conf.d
     networks:
+      - keydb
       - mysql
     volumes:
       - /etc/localtime:/etc/localtime:ro

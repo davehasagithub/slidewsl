@@ -9,6 +9,7 @@
       - APP_ENV={{ varOrValue "APP_ENV" .APP_ENV "local" }}
       - PHP_INI_SCAN_DIR=/usr/local/etc/php/conf.d:/etc/php/conf.d`
    "NETWORKS" `
+      - keydb
       - mysql`
    "VOLUMES_FOR_LOCAL" `
       - ${SLIDEWSL_WEB_ROOT_IN_WSL}:/app/webroot
