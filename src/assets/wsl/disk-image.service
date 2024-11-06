@@ -1,0 +1,16 @@
+[Unit]
+Description=Manage qemu-nbd device
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+EnvironmentFile=/etc/disk-image.conf
+Type=oneshot
+ExecStart=/usr/local/bin/slidewsl-img.sh start
+ExecStop=/usr/local/bin/slidewsl-img.sh stop
+RemainAfterExit=yes
+TimeoutStopSec=30s
+WantedBy=halt.target shutdown.target
+
+[Install]
+WantedBy=multi-user.target
